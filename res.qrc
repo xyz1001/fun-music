@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/image">
+        <file>163MusicAssistant.png</file>
+    </qresource>
+    <qresource prefix="/lang">
+        <file>myI18N_zh_CN.qm</file>
+    </qresource>
+</RCC>

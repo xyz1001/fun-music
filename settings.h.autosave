@@ -1,0 +1,57 @@
+#ifndef SETTINGS_H
+#define SETTINGS_H
+
+#include <QObject>
+#include <QDir>
+#include <QFile>
+
+class Settings : public QObject
+{
+    Q_OBJECT
+private:
+    QString settingFilePath;    //配置文件保存路径
+    QString musicSavePath;  //音乐下载目录
+    bool AlwaysDirectDownload;  //后台解析后自动下载
+    bool autoHide;  //启动时自动隐藏
+    QDir dir;
+    QFile *settings_file;   //配置文件
+    
+    /*
+     * Description：打开并读取本地配置文件
+     * Output：本地配置文件是否成功打开并读取信息
+     */
+    bool loadLocalSettingFile();
+public:
+    explicit Settings(QObject *parent = 0);
+    
+    /*
+     * Description：导入配置信息
+     * Input：@musicDownloadDir: 音乐下载目录，QString类型的引用，函数中会根据本地配置文件对其进行修改
+     *       @isAlwaysDirectDownload: 是否后台自动下载，同上
+     *       @autoHide: 是否启动时自动隐藏，同上
+     * Output: 配置是否成功载入
+     */
+    bool loadSettings(QString &musicDownloadDir, bool &isAlwaysDirectDownload, bool &autoHide);
+    /*
+     * Description：保存配置信息至本地配置文件
+     * Input：@musicDownloadDir: 音乐下载目录，QString类型的引用
+     *       @isAlwaysDirectDownload: 是否后台自动下载，同上
+     *       @autoHide: 是否启动时自动隐藏，同上
+     * Output: 配置是否成功保存
+     */
+    bool saveSettings(QString &musicDownloadDir, bool &isAlwaysDirectDownload, bool &autoHide);
+signals:
+    /*
+     * Description：当有提示信息时发送该信号
+     * Input：@info: 提示信息
+     */
+    void signalSettingsInfo(QString info);
+    /*
+     * Description：当有错误信息时发送该信号
+     * Input：@error: 错误信息
+     */
+    void signalSettingsError(QString error);
+public slots:
+};
+
+#endif // OPTIONLOADER_H

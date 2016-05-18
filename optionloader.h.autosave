@@ -1,0 +1,25 @@
+#ifndef OPTIONLOADER_H
+#define OPTIONLOADER_H
+
+#include <QObject>
+
+class OptionLoader : public QObject
+{
+    Q_OBJECT
+private:
+    QString fileSavePath;
+    QString settingFilePath;
+    
+    bool existSettingFile();
+    bool loadLocalSettingFile();
+    
+public:
+    explicit OptionLoader(QObject *parent = 0);
+    
+    bool loadOptions(QString &filepath, )
+signals:
+
+public slots:
+};
+
+#endif // OPTIONLOADER_H

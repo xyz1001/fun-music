@@ -1,0 +1,182 @@
+#include "settings.h"
+#include <QIODevice>
+#include <QDebug>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
+#include <QJsonParseError>
+
+Settings::Settings(QObject *parent) : QObject(parent)
+{
+    //配置文件路径，默认为当前目录下settings.json文件
+    settingFilePath = QDir::currentPath()+"/settings.json";
+    dir.setPath(settingFilePath);
+    //qDebug()<<dir<<endl;
+}
+
+//检查文件是否存在，是否能成功打开并读取json信息
+bool Settings::loadLocalSettingFile()
+{
+    //如果文件不存在则配置文件载入失败
+    if (!QFile::exists(settingFilePath))
+    {
+        //qDebug()<<"Settings file not exists!"<<endl;
+        return false;
+    }
+
+    //设置配置文件目录
+    settings_file = new QFile(settingFilePath);
+    //如果文件无法以只读方式打开，发送错误信号
+    if (!settings_file->open(QIODevice::ReadOnly))  //!使用QIODevice::ReadOnly而不是QFile::ReadOnly
+    {
+        delete settings_file;
+        settings_file = nullptr;
+        emit signalSettingsError(tr("Fail to read setting file!"));
+        return false;
+    }
+    //读取文件全部内容
+    QString settings_json = settings_file->readAll();
+    //关闭配置文件
+    settings_file->close();
+    delete settings_file;
+    settings_file = nullptr;
+
+    //载入配置文件内容至json对象，如果有错误保存至error中
+    QJsonParseError error;
+    QJsonDocument settings_document = QJsonDocument::fromJson(settings_json.toUtf8(), &error);
+    //如果载入内容没有错误，读取出配置信息
+    if (error.error == QJsonParseError::NoError)
+    {
+        //如果配置文件内容是Json对象
+        if(settings_document.isObject())
+        {
+            QJsonObject obj_settings = settings_document.object();
+            //如果Json对象中包括musicSavePath键且值为字符串，则读取至配置变量中
+            if(obj_settings.contains("musicSavePath"))
+            {
+                if(obj_settings["musicSavePath"].isString())
+                    musicSavePath = obj_settings["musicSavePath"].toString();
+                else
+                {
+                    //qDebug()<<"Settings file parse failed!"<<endl;
+                    return false;
+                }
+            }
+            else
+                return false;
+            //如果Json对象中包括isAlwaysDirectDownload键且值为布尔值，则读取至配置变量中
+            if(obj_settings.contains("isAlwaysDirectDownload"))
+            {
+                if(obj_settings["isAlwaysDirectDownload"].isBool())
+                    AlwaysDirectDownload = obj_settings["isAlwaysDirectDownload"].toBool();
+                else
+                    return false;
+            }
+            else
+                return false;
+            //如果Json对象中包括autoHide键且值为布尔值，则读取至配置变量中
+            if(obj_settings.contains("autoHide"))
+            {
+                if(obj_settings["autoHide"].isBool())
+                    autoHide = obj_settings["autoHide"].toBool();
+                else
+                    return false;
+            }
+            else
+                return false;
+        }
+        else
+            return false;
+    }
+    else
+        return false;
+    return true;
+}
+
+//读取配置文件并将配置信息同步到主窗口配置变量中，并使配置生效
+bool Settings::loadSettings(QString &musicDownloadDir, bool &isAlwaysDirectDownload, bool &autoHide)
+{
+    //如果配置文件信息读取失败，采用默认设置
+    if(!loadLocalSettingFile())
+    {
+        //qDebug()<<"Settings file load failed!"<<endl;
+        //默认配置为开启后台自动下载，关闭启动时自动隐藏，音乐下载目录为当前软件目录下的music目录
+        this->AlwaysDirectDownload = true;
+        this->autoHide = false;
+        this->musicSavePath = QDir::currentPath()+"/music/";
+    }
+
+    //同步至MainWindow类中的配置变量
+    musicDownloadDir = this->musicSavePath;
+    isAlwaysDirectDownload = this->AlwaysDirectDownload;
+    autoHide = this->autoHide;
+
+    //qDebug()<<musicDownloadDir<<endl;
+    //qDebug()<<isAlwaysDirectDownload<<endl;
+    //qDebug()<<autoHide<<endl;
+
+    //如果音乐下载目录不存在则创建
+    dir.setPath(musicSavePath);
+    if(!dir.exists())
+    {
+        //qDebug()<<filepath+"/music"<<endl;
+        //如果无法创建则发出错误信息
+        if(!dir.mkdir(dir.path()))
+        {
+            emit signalSettingsError(tr("Fail to create music download directory!"));
+            return false;
+        }
+    }
+    return true;
+}
+
+//保存配置信息到本地
+bool Settings::saveSettings(QString &musicDownloadDir, bool &isAlwaysDirectDownload, bool &autoHide)
+{
+    //如果本地配置文件已存在
+    if (QFile::exists(settingFilePath))
+    {
+        //移除原始的配置文件
+        QFile::remove(settingFilePath);
+    }
+
+    //打开新配置文件
+    settings_file = new QFile(settingFilePath);
+    //打开失败显示错误信息
+    if (!settings_file->open(QIODevice::WriteOnly))
+    {
+        emit signalSettingsError(tr("Fail to save settings!"));
+        return false;
+    }
+
+    //新建Json对象
+    QJsonObject obj_settings;
+    //插入数据键值对
+    obj_settings.insert("musicSavePath", musicDownloadDir);
+    obj_settings.insert("isAlwaysDirectDownload", isAlwaysDirectDownload);
+    obj_settings.insert("autoHide", autoHide);
+
+    //新建Json文档类型并转换为字节数组后写入新配置文件
+    QJsonDocument settings_document;
+    settings_document.setObject(obj_settings);
+    QByteArray byteArray = settings_document.toJson(QJsonDocument::Compact);
+    //刷新文件流并关闭文件
+    settings_file->write(byteArray);
+    settings_file->flush();
+    settings_file->close();
+    delete settings_file;
+    settings_file = 0;
+
+    //如果音乐下载目录不存在则创建
+    dir.setPath(musicDownloadDir);
+    if(!dir.exists())
+    {
+        //qDebug()<<filepath+"/music"<<endl;
+        if(!dir.mkdir(dir.path()))
+        {
+            emit signalSettingsError(tr("Fail to create music download directory!"));
+            return false;
+        }
+    }
+    return true;
+}
