@@ -1,6 +1,5 @@
 #include "options.h"
 #include "ui_options.h"
-#include "ui_androidoptions.h"
 #include <QFileDialog>
 #include <QPushButton>
 #include <QDir>

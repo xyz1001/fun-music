@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "ui_androidmainwindow.h"
 #include <QIcon>
 #include <QMessageBox>
 #include <QDebug>
