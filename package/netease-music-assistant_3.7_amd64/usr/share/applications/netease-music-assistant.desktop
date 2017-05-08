@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Exec=/usr/bin/netease-music-assistant
+Name=网易云音乐下载助手
+GenericName=下载网易云音乐中付费或下架歌曲。
+Icon=netease-music-assistant
+Terminal=false
+Categories=Music;Qt;
