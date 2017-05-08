@@ -6,23 +6,30 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>623</width>
-    <height>255</height>
+    <width>864</width>
+    <height>463</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string/>
+   <string>163 Music Download Assistant</string>
   </property>
   <property name="windowIcon">
    <iconset resource="res.qrc">
-    <normaloff>:/image/163MusicAssistant.png</normaloff>:/image/163MusicAssistant.png</iconset>
+    <normaloff>:/image/icon/image/icon/163MusicAssistant.png</normaloff>:/image/icon/image/icon/163MusicAssistant.png</iconset>
+  </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {border-image: url(:/image/pic/image/pic/background.png);}
+background:transparent;</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QLabel" name="labelMusicName">
     <property name="geometry">
      <rect>
       <x>13</x>
-      <y>60</y>
+      <y>10</y>
       <width>61</width>
       <height>20</height>
      </rect>
@@ -36,7 +43,7 @@
      </font>
     </property>
     <property name="text">
-     <string/>
+     <string>Music:</string>
     </property>
     <property name="textFormat">
      <enum>Qt::AutoText</enum>
@@ -49,7 +56,7 @@
     <property name="geometry">
      <rect>
       <x>13</x>
-      <y>110</y>
+      <y>40</y>
       <width>61</width>
       <height>20</height>
      </rect>
@@ -63,16 +70,16 @@
      </font>
     </property>
     <property name="text">
-     <string/>
+     <string>Artist:</string>
     </property>
    </widget>
    <widget class="QLabel" name="labelAlbumName">
     <property name="geometry">
      <rect>
       <x>13</x>
-      <y>160</y>
+      <y>70</y>
       <width>61</width>
-      <height>20</height>
+      <height>21</height>
      </rect>
     </property>
     <property name="font">
@@ -84,14 +91,17 @@
      </font>
     </property>
     <property name="text">
-     <string/>
+     <string>Album:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
    <widget class="QLabel" name="labelDownloadAddress">
     <property name="geometry">
      <rect>
-      <x>380</x>
-      <y>70</y>
+      <x>10</x>
+      <y>340</y>
       <width>81</width>
       <height>20</height>
      </rect>
@@ -105,7 +115,7 @@
      </font>
     </property>
     <property name="text">
-     <string/>
+     <string>Download Link:</string>
     </property>
     <property name="buddy">
      <cstring>lineEditDownloadAddress</cstring>
@@ -114,8 +124,8 @@
    <widget class="QLineEdit" name="lineEditDownloadAddress">
     <property name="geometry">
      <rect>
-      <x>460</x>
-      <y>70</y>
+      <x>90</x>
+      <y>340</y>
       <width>151</width>
       <height>21</height>
      </rect>
@@ -125,167 +135,100 @@
     </property>
    </widget>
    <widget class="QPushButton" name="pushButtonCopy">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
-      <x>380</x>
-      <y>130</y>
+      <x>10</x>
+      <y>370</y>
       <width>71</width>
       <height>41</height>
      </rect>
     </property>
     <property name="text">
-     <string/>
+     <string>Copy</string>
     </property>
    </widget>
    <widget class="QLabel" name="labelMusic">
     <property name="geometry">
      <rect>
       <x>80</x>
-      <y>60</y>
-      <width>141</width>
+      <y>10</y>
+      <width>161</width>
       <height>20</height>
      </rect>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
    <widget class="QLabel" name="labelSinger">
     <property name="geometry">
      <rect>
       <x>80</x>
-      <y>110</y>
-      <width>141</width>
+      <y>40</y>
+      <width>161</width>
       <height>20</height>
      </rect>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
    <widget class="QLabel" name="labelAlbum">
     <property name="geometry">
      <rect>
       <x>80</x>
-      <y>160</y>
-      <width>141</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="labelInputSongID">
-    <property name="geometry">
-     <rect>
-      <x>50</x>
-      <y>10</y>
+      <y>70</y>
       <width>161</width>
       <height>20</height>
      </rect>
     </property>
-    <property name="font">
-     <font>
-      <family>ADMUI3Lg</family>
-      <pointsize>12</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
     <property name="text">
      <string/>
     </property>
-    <property name="buddy">
-     <cstring>lineEditSongID</cstring>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="lineEditSongID">
-    <property name="geometry">
-     <rect>
-      <x>220</x>
-      <y>10</y>
-      <width>151</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="maxLength">
-     <number>12</number>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButtonParse">
-    <property name="geometry">
-     <rect>
-      <x>390</x>
-      <y>10</y>
-      <width>71</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButtonDownload">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
-      <x>460</x>
-      <y>130</y>
-      <width>70</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButtonDownloadTo">
-    <property name="geometry">
-     <rect>
-      <x>540</x>
-      <y>130</y>
+      <x>90</x>
+      <y>370</y>
       <width>71</width>
       <height>41</height>
      </rect>
     </property>
     <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButtonClear">
-    <property name="geometry">
-     <rect>
-      <x>560</x>
-      <y>10</y>
-      <width>51</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButtonParseAndDownload">
-    <property name="geometry">
-     <rect>
-      <x>470</x>
-      <y>10</y>
-      <width>81</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
+     <string>Download</string>
     </property>
    </widget>
    <widget class="QLabel" name="labelPicture">
     <property name="geometry">
      <rect>
-      <x>220</x>
-      <y>50</y>
-      <width>151</width>
-      <height>141</height>
+      <x>10</x>
+      <y>100</y>
+      <width>231</width>
+      <height>231</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>15</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
     </property>
     <property name="frameShape">
      <enum>QFrame::Panel</enum>
@@ -296,6 +239,176 @@
     <property name="text">
      <string/>
     </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QTableWidget" name="tableWidgetMusicsInfo">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>10</y>
+      <width>591</width>
+      <height>351</height>
+     </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>true</bool>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background:transparent;</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Panel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+    <property name="editTriggers">
+     <set>QAbstractItemView::NoEditTriggers</set>
+    </property>
+    <property name="selectionMode">
+     <enum>QAbstractItemView::SingleSelection</enum>
+    </property>
+    <property name="selectionBehavior">
+     <enum>QAbstractItemView::SelectRows</enum>
+    </property>
+    <property name="gridStyle">
+     <enum>Qt::SolidLine</enum>
+    </property>
+    <property name="rowCount">
+     <number>0</number>
+    </property>
+    <property name="columnCount">
+     <number>6</number>
+    </property>
+    <attribute name="horizontalHeaderVisible">
+     <bool>true</bool>
+    </attribute>
+    <attribute name="horizontalHeaderHighlightSections">
+     <bool>false</bool>
+    </attribute>
+    <attribute name="horizontalHeaderStretchLastSection">
+     <bool>true</bool>
+    </attribute>
+    <attribute name="verticalHeaderVisible">
+     <bool>false</bool>
+    </attribute>
+    <attribute name="verticalHeaderCascadingSectionResizes">
+     <bool>false</bool>
+    </attribute>
+    <attribute name="verticalHeaderHighlightSections">
+     <bool>false</bool>
+    </attribute>
+    <attribute name="verticalHeaderShowSortIndicator" stdset="0">
+     <bool>false</bool>
+    </attribute>
+    <attribute name="verticalHeaderStretchLastSection">
+     <bool>false</bool>
+    </attribute>
+    <column>
+     <property name="text">
+      <string>ID</string>
+     </property>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Music</string>
+     </property>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Duration</string>
+     </property>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Size</string>
+     </property>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>DownloadProgress</string>
+     </property>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Status</string>
+     </property>
+     <property name="textAlignment">
+      <set>AlignCenter</set>
+     </property>
+    </column>
+   </widget>
+   <widget class="QPushButton" name="pushButtonPlay">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>370</y>
+      <width>71</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Play</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButtonDownloadAll">
+    <property name="geometry">
+     <rect>
+      <x>580</x>
+      <y>370</y>
+      <width>81</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Download All</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButtonDeleteAll">
+    <property name="geometry">
+     <rect>
+      <x>780</x>
+      <y>370</y>
+      <width>75</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Clear</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButtonRetryAll">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>370</y>
+      <width>81</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Retry All</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -303,36 +416,28 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>623</width>
+     <width>864</width>
      <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_file">
     <property name="title">
-     <string/>
+     <string>&amp;File</string>
     </property>
    </widget>
    <widget class="QMenu" name="menu_setting">
     <property name="title">
-     <string/>
+     <string>&amp;Settings</string>
     </property>
    </widget>
    <widget class="QMenu" name="menu_about">
     <property name="title">
-     <string/>
+     <string>&amp;About</string>
     </property>
    </widget>
    <addaction name="menu_file"/>
    <addaction name="menu_setting"/>
    <addaction name="menu_about"/>
-  </widget>
-  <widget class="QToolBar" name="mainToolBar">
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar">
    <property name="enabled">
@@ -362,8 +467,6 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <tabstops>
-  <tabstop>lineEditSongID</tabstop>
-  <tabstop>pushButtonParse</tabstop>
   <tabstop>pushButtonCopy</tabstop>
   <tabstop>pushButtonDownload</tabstop>
   <tabstop>lineEditDownloadAddress</tabstop>

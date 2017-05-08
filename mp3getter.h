@@ -1,40 +1,35 @@
 #ifndef MP3GETTER_H
 #define MP3GETTER_H
 
-#include <QObject>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QNetworkRequest>
-#include <QUrl>
 #include <QFile>
+#include "networkaccess.h"
+#include "constant.h"
 
-class MP3Getter : public QObject
+class MP3Getter : public NetworkAccess
 {
     Q_OBJECT
 private:
-    QNetworkAccessManager *manager;
-    QNetworkReply *reply;
-    QUrl url;
-    QFile *file;
-    QString filename;
-    bool isAborted;
+    QFile *file = nullptr;
+    QString filepath;
+    int musicSize = 0;
+    quint64 BytesReceived = 0;
 
-    QWidget *widget;
+    void sendRequest();
+
 public:
-    explicit MP3Getter(QUrl url, QString filename, QWidget *widget, QObject *parent = 0);
+    explicit MP3Getter(QUrl url, QString filepath, QObject *parent = 0);
+    ~MP3Getter();
 
-    void getMP3();
+    void start();
 signals:
     void signalMP3Downloaded();
     void signalDownloadProgress(qint64, qint64);
     void signalInfo(QString info);
-    void signalError(QString error);
 public slots:
-    bool filenameCheck();
     void MP3ReadyRead();
-    void cancelDownload();
     void MP3DownloadProgress(qint64 bytesRead, qint64 totalbytes);
-    void MP3replyFinished();
+    void onReplyFinished();
+    void onTimeOut();
 };
 
 #endif // MP3GETTER_H

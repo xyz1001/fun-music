@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QMap>
+#include "jsongetter.h"
 
 class JsonHandler : public QObject
 {
@@ -10,6 +11,7 @@ class JsonHandler : public QObject
 private:
     QString json_content;
     QMap<QString, QString> *music_info;
+    JsonGetter *albumJson;
 
     void mp3UrlReprocessing();
 signals:

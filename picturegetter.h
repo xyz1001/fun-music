@@ -1,32 +1,29 @@
 #ifndef PICTUREGETTER_H
 #define PICTUREGETTER_H
 
-#include <QObject>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QNetworkRequest>
-#include <QUrl>
 #include <QPixmap>
+#include "networkaccess.h"
+#include "constant.h"
 
-class PictureGetter: public QObject
+class PictureGetter: public NetworkAccess
 {
     Q_OBJECT
 private:
     QPixmap *pixmap;
-    QUrl url;
-    QNetworkAccessManager *manager;
-    QNetworkReply *reply;
+    bool success;
 
+    void sendRequest();
 public:
     explicit PictureGetter(QUrl url, QObject *parent = 0);
+    ~PictureGetter();
 
     QPixmap *getPixmap();
-    void getPicture();
+    void start();
 signals:
     void signalPictureDownloaded(QPixmap *pixmap);
-    void signalError(QString error);
 public slots:
-    void PictureReplyFinished();
+    void onReplyFinished();
+    void onTimeOut();
 };
 
 #endif // PICTUREGETTER_H

@@ -2,30 +2,30 @@
 #define HTMLGETTER_H
 
 #include <QObject>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QNetworkRequest>
-#include <QUrl>
+#include "networkaccess.h"
+#include "constant.h"
+#include "musicinfo.h"
 
-class HtmlGetter : public QObject
+class HtmlGetter : public NetworkAccess
 {
     Q_OBJECT
 private:
-    QString htmlString; //获取到的Html数据
-    QUrl url;   //请求链接
+    QString html; //获取到的Html数据
 
-    QNetworkAccessManager *manager; //网络管理
-    QNetworkReply *reply;   //应答
+    MusicInfo *musicInfo;
+
+    void sendRequest();
 public:
-    explicit HtmlGetter(QUrl url, QObject *parent = 0);
+    explicit HtmlGetter(QUrl url, MusicInfo *musicInfo, QObject *parent = 0);
+    ~HtmlGetter();
+    void start();
 
-    QString getHtmlString();
-    void getHtml();
 signals:
-    void signalsError(QString error);
-    void signalHtmlGotten();
+    void signalError(QString error);
+    void signalHtmlGotten(QString html);
 public slots:
-    void htmlReplyFinished();
+    void onReplyFinished();
+    void onTimeOut();
 };
 
 #endif // HTMLGETTER_H

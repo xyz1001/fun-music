@@ -4,62 +4,146 @@
 #include <QDebug>
 #include <QVector>
 
-HtmlHandler::HtmlHandler(QString html_content, QMap<QString, QString> *music_info, QObject *parent) : QObject(parent)
+HtmlHandler::HtmlHandler(QString html, MusicInfo *musicInfo, QObject *parent) : QObject(parent)
 {
-    this->html_content = html_content;
-    //qDebug()<<html_content<<endl;
-    this->music_info = music_info;
+    this->html = html;
+    //qDebug()<<htmlString<<endl;
+    this->musicInfo = musicInfo;
 }
 
-void HtmlHandler::getMusicInfo()
+QString HtmlHandler::parse()
 {
-    getInfomation();
-    getLinks();
-    emit signalMusicInfoGotten(music_info);
+    QString error;
+    getMusicName();
+    getAlais();
+    getArtist();
+    getAlbum();
+    error = getMP3Url();
+    getArtistId();
+    getAlbumId();
+    getPicUrl();
+
+    return error;
 }
 
-void HtmlHandler::getInfomation()
+void HtmlHandler::getMusicName()
 {
-    QString pattern("(>)([^;=]+)(</a>)");
+    //匹配歌曲名
+    QString pattern("(<h2>)(.*)(</h2>)");
     QRegExp rx(pattern);
     int pos=0;
-    QVector<QString> key={"name", "artists", "album"};
-    //qDebug()<<key[1]<<endl;
-    int i=0;
-    //依次对匹配的内容进行提取
-    while(pos>=0 && i<4)
+    pos=rx.indexIn(html, pos);
+    if(pos >= 0)
     {
-        //丢弃第一次匹配的内容
-        pos=rx.indexIn(html_content, pos);
-        if(pos >= 0 && i>0)
-        {
-            //捕获组2为所需要的信息
-            (*music_info)[key[i-1]] = rx.cap(2);
-            //qDebug()<<rx.cap(2)<<endl;
-        }
-        //跳过本次匹配到的内容继续匹配
-        pos+=rx.matchedLength();
-        ++i;
+        //捕获组2为歌曲名
+        musicInfo->name = rx.cap(2);
+        //qDebug()<<"Music: "<<rx.cap(2)<<endl;
     }
 }
 
-void HtmlHandler::getLinks()
+void HtmlHandler::getAlais()
 {
-    QString pattern("(href=\")([^<>\"]+music[^<>\"]+)(\")");
+
+}
+
+void HtmlHandler::getArtist()
+{
+    //匹配歌手名
+    QString pattern("(</h2>)(\\s+)(<p>)([^;=<>]+)(</p>)");
     QRegExp rx(pattern);
     int pos=0;
-    QVector<QString> key={"songUrl", "artistsUrl", "albumUrl", "mp3Url", "picUrl"};
-    int i=0;
-
-    while(pos>=0 && i<5)
+    pos=rx.indexIn(html, pos);
+    if(pos >= 0)
     {
-        pos=rx.indexIn(html_content, pos);
-        if(pos >= 0)
-        {
-            (*music_info)[key[i]] = rx.cap(2);
-            //qDebug()<<rx.cap(2)<<endl;
-        }
-        pos+=rx.matchedLength();
-        ++i;
+        //捕获组4为歌手名
+        musicInfo->artist = rx.cap(4);
+        musicInfo->artists.push_back(musicInfo->artist);
+        //qDebug()<<"Artist: "<<rx.cap(4)<<endl;
+    }
+}
+
+void HtmlHandler::getAlbum()
+{
+    //匹配专辑名 <p class="text-primary">魔鬼的情诗 II </p></a>
+    QString pattern("(<p class=\\\"text-primary\\\">)([^;=<>]+)(</p></a>)");
+    QRegExp rx(pattern);
+    int pos=0;
+    pos=rx.indexIn(html, pos);
+    if(pos >= 0)
+    {
+        //捕获组4为专辑名
+        musicInfo->album = rx.cap(2);
+        //qDebug()<<"Album: "<<rx.cap(2)<<endl;
+    }
+}
+
+QString HtmlHandler::getMP3Url()
+{
+    //匹配歌曲下载地址
+    QString pattern("(href=\")([^;<>\"]+.mp3)(\")");
+    QRegExp rx(pattern);
+    int pos=0;
+    pos=rx.indexIn(html, pos);
+    if(pos >= 0)
+    {
+        DownloadInfo downloadInfo;
+        downloadInfo.mp3Url = rx.cap(2);
+        downloadInfo.extension = "mp3";
+        //捕获组2为歌曲下载地址
+        musicInfo->downloadInfo.push_back(downloadInfo);
+        //qDebug()<<"MP3Url: "<<rx.cap(2)<<endl;
+    }
+    else
+        return tr("Fail to get mp3Url");
+
+    return "";
+}
+
+void HtmlHandler::getMusicUrl()
+{
+
+}
+
+void HtmlHandler::getArtistId()
+{
+//    //匹配歌手链接
+//    QString pattern("(</h2>)(\s+)(<p>)([\u4e00-\u9fa5]+)");
+//    QRegExp rx(pattern);
+//    int pos=0;
+//    pos=rx.indexIn(htmlString, pos);
+//    if(pos >= 0)
+//    {
+//        //捕获组2为歌手链接
+//        musicInfo->artist = rx.cap(4);
+//        //qDebug()<<rx.cap(2)<<endl;
+//    }
+}
+
+void HtmlHandler::getAlbumId()
+{
+    //匹配专辑链接
+    QString pattern("(album/)(\\d+)");
+    QRegExp rx(pattern);
+    int pos=0;
+    pos=rx.indexIn(html, pos);
+    if(pos >= 0)
+    {
+        //捕获组2为专辑链接
+        musicInfo->albumId = rx.cap(2).toInt();
+    }
+}
+
+void HtmlHandler::getPicUrl()
+{
+    //匹配图片链接
+    QString pattern("(href=\")([^;<>\"]+.jpg)(\")");
+    QRegExp rx(pattern);
+    int pos=0;
+    pos=rx.indexIn(html, pos);
+    if(pos >= 0)
+    {
+        //捕获组2为图片链接
+        musicInfo->picUrl = rx.cap(2);
+        //qDebug()<<"PicUrl: "<<rx.cap(2)<<endl;
     }
 }

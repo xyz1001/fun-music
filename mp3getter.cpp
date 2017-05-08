@@ -2,114 +2,130 @@
 #include <QMessageBox>
 #include <QFileInfo>
 #include <QDebug>
+#include <QTime>
 #include "mainwindow.h"
 
-MP3Getter::MP3Getter(QUrl url, QString filename, QWidget *widget, QObject *parent) : QObject(parent)
+MP3Getter::MP3Getter(QUrl url, QString filepath, QObject *parent)
+    : NetworkAccess(url, parent)
 {
-    this->widget = widget;
-    this->url=url;
-    this->filename=filename;
-    //qDebug()<<url<<endl;
-    isAborted = false;
-    manager=new QNetworkAccessManager(this);
+    this->filepath=filepath;
+    timer.setInterval(10000);
 }
 
-void MP3Getter::getMP3()
+MP3Getter::~MP3Getter()
 {
-    if(filenameCheck())
+    if(file != nullptr)
     {
-        emit signalInfo(tr("Start downloading ") + QFileInfo(filename).fileName());
-        //qDebug()<<"start downloading..."<<endl;
-        isAborted=false;
-        reply=manager->get(QNetworkRequest(url));
-        connect(reply, &QNetworkReply::readyRead, this, &MP3Getter::MP3ReadyRead);
-        connect(reply, &QNetworkReply::downloadProgress, this, &MP3Getter::MP3DownloadProgress);
-        connect(reply, &QNetworkReply::finished, this, &MP3Getter::MP3replyFinished);
+        delete file;
+        file = 0;
+    }
+    if(reply != nullptr)
+    {
+        delete reply;
+        reply = nullptr;
+    }
+}
+
+void MP3Getter::sendRequest()
+{
+    ++retryTime;
+    //qDebug()<<QTime::currentTime().toString()<<": "<<"retryTime: "<<retryTime<<endl;
+    if(reply != nullptr)
+    {
+        delete reply;
+        reply = nullptr;
+    }
+    QNetworkRequest request(url);
+    request.setRawHeader("Range", (QString("bytes=%1-").arg(BytesReceived)).toLatin1());
+    reply=networkManager->get(request);
+    connect(reply, &QNetworkReply::readyRead, this, &MP3Getter::MP3ReadyRead);
+    connect(reply, &QNetworkReply::downloadProgress, this, &MP3Getter::MP3DownloadProgress);
+    connect(reply, &QNetworkReply::finished, this, &MP3Getter::onReplyFinished);
+
+    timer.start();
+    //qDebug()<<"start\n";
+}
+
+void MP3Getter::start()
+{
+    file = new QFile(filepath);
+
+    if (!file->open(QIODevice::WriteOnly))
+    {
+        emit errorOccurred(tr("Unable to save the file %1: %2.").arg(filepath).arg(file->errorString()),
+                           MP3_GETTER_ERROR);
+        delete file;
+        file = nullptr;
     }
     else
     {
-        //qDebug()<<"Unable to save file" + filename<<endl;
-        //emit signalError(tr("Unable to save file: ") + filename);
-        return;
+        sendRequest();
     }
-}
-
-bool MP3Getter::filenameCheck()
-{
-    //如果歌曲已存在则弹窗询问是否覆盖
-    if (QFile::exists(filename)) {
-        if (QMessageBox::question(widget, tr("File exists"),
-                                  tr("There already exists a file called %1 in "
-                                     "the current directory. Overwrite?").arg(filename),
-                                  QMessageBox::Yes|QMessageBox::No, QMessageBox::No)
-            == QMessageBox::No)
-            return false;
-        QFile::remove(filename);
-    }
-
-    file = new QFile(filename);
-    if (!file->open(QIODevice::WriteOnly)) {
-        emit signalError(tr("Unable to save the file %1: %2.").arg(filename).arg(file->errorString()));
-        delete file;
-        file = 0;
-        return false;
-    }
-
-    //qDebug()<<"Check ok!"<<endl;
-    return true;
 }
 
 void MP3Getter::MP3ReadyRead()
 {
+    timer.stop();
     //有数据便进行读取
     if(file)
         file->write(reply->readAll());
-}
-
-void MP3Getter::cancelDownload()
-{
-    reply->abort();
-    isAborted=true;
+    timer.start();
 }
 
 void MP3Getter::MP3DownloadProgress(qint64 bytesRead, qint64 totalbytes)
 {
-    if(isAborted)
-        return;
-    emit signalDownloadProgress(bytesRead, totalbytes);
+    if(totalbytes + BytesReceived > 500)
+    {
+        //qDebug()<<QString("(%1,%2)").arg(bytesRead).arg(totalbytes)<<endl;
+        emit signalDownloadProgress(bytesRead + BytesReceived, totalbytes + BytesReceived);
+    }
 }
 
-void MP3Getter::MP3replyFinished()
+void MP3Getter::onTimeOut()
 {
-    if (isAborted)
+    if(retryTime > 30)
     {
-        if (file)
-        {
-            file->close();
-            file->remove();
-            delete file;
-            file = 0;
-        }
-        reply->deleteLater();
-        return;
-    }
-
-    file->flush();
-    file->close();
-
-    if (reply->error())
-    {
+        //qDebug()<<QTime::currentTime().toString()<<": "<<"1\n";
+        file->flush();
+        file->close();
         file->remove();
-        emit signalError(tr("Download failed: %1.").arg(reply->errorString()));
+        emit errorOccurred(tr("Netword error!"), MP3_GETTER_ERROR);
     }
     else
     {
-        emit signalMP3Downloaded();
+        disconnect(reply, &QNetworkReply::readyRead, this, &MP3Getter::MP3ReadyRead);
+        disconnect(reply, &QNetworkReply::downloadProgress, this, &MP3Getter::MP3DownloadProgress);
+        disconnect(reply, &QNetworkReply::finished, this, &MP3Getter::onReplyFinished);
+        reply->abort();
+        file->flush();
+        BytesReceived = file->size();
+        sendRequest();
     }
-
-    reply->deleteLater();
-    reply = 0;
-    delete file;
-    file = 0;
 }
 
+void MP3Getter::onReplyFinished()
+{
+    //qDebug()<<QTime::currentTime().toString()<<": "<<"finished\n";
+    timer.stop();
+    file->flush();
+    file->close();
+
+    if (reply->error() == QNetworkReply::NoError)
+    {
+        emit signalMP3Downloaded();
+    }
+    else if(retryTime <= 30)
+    {
+        disconnect(reply, &QNetworkReply::finished, this, &MP3Getter::onReplyFinished);
+        file->remove();
+        delete file;
+        file = nullptr;
+        BytesReceived = 0;
+        start();
+    }
+    else
+    {
+        file->remove();
+        emit errorOccurred(tr("Network error!"), MP3_GETTER_ERROR);
+    }
+}

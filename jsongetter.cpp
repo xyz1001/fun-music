@@ -1,38 +1,74 @@
 #include "jsongetter.h"
-#include <QDebug>
+#include "constant.h"
 
 JsonGetter::JsonGetter(QUrl url, QObject *parent)
-    :QObject(parent)
+    : NetworkAccess(url, parent)
 {
-    this->url=url;
-    manager=new QNetworkAccessManager(this);
+    timer.setInterval(5000);
 }
 
-QString JsonGetter::getJsonString()
+JsonGetter::~JsonGetter()
 {
-    if(jsonString.isEmpty())
+    if(reply != nullptr)
     {
-        emit signalsError(tr("Fail to parsing!"));
-        return nullptr;
-    }
-    return jsonString;
-}
+        delete reply;
+        reply = nullptr;
+    }}
 
-void JsonGetter::getJson()
+void JsonGetter::sendRequest()
 {
-    if(url.isEmpty())
+    ++retryTime;
+    QNetworkRequest request(url);
+    request.setRawHeader("Referer", "http://music.163.com/");
+    request.setRawHeader("Cookie", "appver=1.5.0.75771");
+    if(reply != nullptr)
     {
-        emit signalsError(tr("Url is empty!"));
-        return;
+        delete reply;
+        reply = nullptr;
     }
-    reply=manager->get(QNetworkRequest(url));
-    connect(reply, &QNetworkReply::finished, this, &JsonGetter::jsonReplyFinished);
+    reply = networkManager->get(request);
+    connect(reply, &QNetworkReply::finished, this, &JsonGetter::onReplyFinished);
+    timer.start();
 }
 
-void JsonGetter::jsonReplyFinished()
+void JsonGetter::start()
 {
-    if(reply->error() == QNetworkReply::NoError)
-        jsonString=reply->readAll();
-    reply->deleteLater();
-    emit signalJsonGotten();
+    sendRequest();
 }
+
+
+
+void JsonGetter::onReplyFinished()
+{
+    timer.stop();
+    if(reply->error() == reply->NoError)
+    {
+        json = QString::fromUtf8(reply->readAll());
+        emit JsonGotton(json);
+    }
+    else if(retryTime < 3)
+    {
+        disconnect(reply, &QNetworkReply::finished, this, &JsonGetter::onReplyFinished);
+        start();
+    }
+    else
+    {
+        emit errorOccurred(tr("Network error!"), JSON_GETTER_ERROR);
+    }
+}
+
+void JsonGetter::onTimeOut()
+{
+    if(retryTime >= 3)
+    {
+        emit errorOccurred(tr("Netword error!"), JSON_GETTER_ERROR);
+    }
+    else
+    {
+        disconnect(reply, &QNetworkReply::finished, this, &JsonGetter::onReplyFinished);
+        start();
+    }
+}
+
+
+

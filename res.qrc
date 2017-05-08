@@ -1,8 +1,25 @@
 <RCC>
-    <qresource prefix="/image">
-        <file>163MusicAssistant.png</file>
-    </qresource>
     <qresource prefix="/lang">
         <file>myI18N_zh_CN.qm</file>
+    </qresource>
+    <qresource prefix="/image/icon">
+        <file>image/icon/163MusicAssistant.png</file>
+        <file>image/icon/about.png</file>
+        <file>image/icon/aboutme.png</file>
+        <file>image/icon/copylink.png</file>
+        <file>image/icon/delete.png</file>
+        <file>image/icon/download.png</file>
+        <file>image/icon/help.png</file>
+        <file>image/icon/openfile.png</file>
+        <file>image/icon/options.png</file>
+        <file>image/icon/play.png</file>
+        <file>image/icon/quit.png</file>
+        <file>image/icon/retry.png</file>
+    </qresource>
+    <qresource prefix="/image/pic">
+        <file>image/pic/error.png</file>
+        <file>image/pic/getlink1.png</file>
+        <file>image/pic/getlink2.png</file>
+        <file>image/pic/background.png</file>
     </qresource>
 </RCC>

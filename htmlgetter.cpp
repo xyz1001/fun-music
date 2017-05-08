@@ -1,43 +1,70 @@
 #include "htmlgetter.h"
 #include <QDebug>
+#include "constant.h"
 
-HtmlGetter::HtmlGetter(QUrl url, QObject *parent) :
-    QObject(parent)
+HtmlGetter::HtmlGetter(QUrl url, MusicInfo *musicInfo, QObject *parent) :
+    NetworkAccess(url, parent)
 {
-    this->url=url;
-    manager=new QNetworkAccessManager(this);
+    this->musicInfo = musicInfo;
+    timer.setInterval(5000);
 }
 
-QString HtmlGetter::getHtmlString()
+HtmlGetter::~HtmlGetter()
 {
-    //返回获取到的Html数据
-    if(htmlString.isEmpty())
+    if(reply != nullptr)
     {
-        emit signalsError(tr("Fail to parsing!"));
-        return nullptr;
-    }
-    return htmlString;
-}
+        delete reply;
+        reply = nullptr;
+    }}
 
-void HtmlGetter::getHtml()
+void HtmlGetter::sendRequest()
 {
-    if(url.isEmpty())
+    ++retryTime;
+    if(reply != nullptr)
     {
-        emit signalsError(tr("Url is empty!"));
-        return;
+        delete reply;
+        reply = nullptr;
     }
     //发送请求并获取应答数据
-    reply=manager->get(QNetworkRequest(url));
-    connect(reply, &QNetworkReply::finished, this, &HtmlGetter::htmlReplyFinished);
+    reply=networkManager->get(QNetworkRequest(url));
+    connect(reply, &QNetworkReply::finished, this, &HtmlGetter::onReplyFinished);
+    timer.start();
 }
 
-void HtmlGetter::htmlReplyFinished()
+void HtmlGetter::start()
 {
+    sendRequest();
+}
+
+void HtmlGetter::onReplyFinished()
+{
+    timer.stop();
     //应答完成后将应答数据存入htmlString
     if(reply->error() == QNetworkReply::NoError)
-        htmlString=reply->readAll();
-    reply->deleteLater();
-    //发送Html原始数据获取信号
-    emit signalHtmlGotten();
+    {
+        html=QString::fromUtf8(reply->readAll());
+        emit signalHtmlGotten(html);
+    }
+    else if(retryTime < 3)
+    {
+        disconnect(reply, &QNetworkReply::finished, this, &HtmlGetter::onReplyFinished);
+        start();
+    }
+    else
+    {
+        emit errorOccurred(tr("Netword error!"), HTML_GETTER_ERROR);
+    }
 }
 
+void HtmlGetter::onTimeOut()
+{
+    if(retryTime >= 3)
+    {
+        emit errorOccurred(tr("Netword error!"), HTML_GETTER_ERROR);
+    }
+    else
+    {
+        disconnect(reply, &QNetworkReply::finished, this, &HtmlGetter::onReplyFinished);
+        start();
+    }
+}

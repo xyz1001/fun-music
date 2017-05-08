@@ -6,26 +6,26 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QUrl>
+#include <QTimer>
+#include "networkaccess.h"
 
-class JsonGetter : public QObject
+class JsonGetter : public NetworkAccess
 {
     Q_OBJECT
 private:
-    QString jsonString;
-    QUrl url;
+    QString json = nullptr;
 
-    QNetworkAccessManager *manager;
-    QNetworkReply *reply;
+    void sendRequest();
 public:
     explicit JsonGetter(QUrl url, QObject *parent = 0);
+    ~JsonGetter();
 
-    QString getJsonString();
-    void getJson();
+    void start();
 signals:
-    void signalsError(QString error);
-    void signalJsonGotten();
-public slots:
-    void jsonReplyFinished();
+    void JsonGotton(QString json);
+private slots:
+    void onReplyFinished();
+    void onTimeOut();
 };
 
 #endif // JSONGETTER_H

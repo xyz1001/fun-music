@@ -3,10 +3,11 @@
 
 #include <QDialog>
 #include <QWidget>
+#include "constant.h"
+#include "settings.h"
 
 namespace Ui {
-class AndroidOptions;
-class Options;
+    class Options;
 }
 
 class Options : public QDialog
@@ -17,22 +18,39 @@ public:
     explicit Options(QWidget *parent = 0);
     ~Options();
 
+    /*
+     * Description: 选择音乐下载目录
+     * Output: 返回音乐保存目录
+     */
     QString chooseMusicDownloadDir();
-    void loadSettings(QString musicSaveDir, bool autoDownload, bool autoHide);
+    /*
+     * Description: 导入当前配置
+     */
+    void loadConfigs();
 private:
     Ui::Options *ui;
-    //Ui::AndroidOptions *ui;
-    QString musicSaveDir;
-    bool autoDownload;
-    bool autoHide;
 
+    //应用选项
     void apply();
-signals:
-    void signalUpdateSettings(QString musicSaveDir, bool autoDownload, bool autoHide);
+    void writeConfigs();
+
 public slots:
+    /*
+     * Description: 响应选择目录按钮点击事件，弹出音乐下载目录选择框
+     */
     void onBtnSelectClicked();
+    void onBtnOpenClicked();
+    /*
+     * Description: 响应确认按钮点击事件，应用设置并关闭选项窗口
+     */
     void onBtnOKClicked();
+    /*
+     * Description: 响应应用按钮点击事件，应用设置
+     */
     void onBtnApplyClicked();
+    /*
+     * Description: 响应取消按钮点击事件，隐藏选项窗口
+     */
     void onBtnCancelClicked();
 };
 

@@ -1,47 +1,73 @@
 #include "handlerwithjson.h"
 #include <QDebug>
+#include <QRegExp>
 
-HandlerWithJson::HandlerWithJson(QObject *parent) : DataGetter(parent)
+HandlerWithJson::HandlerWithJson(MusicInfo *musicInfo, QWidget *widget, QObject *parent)
+    : DataGetter(musicInfo, widget, parent)
 {
 
 }
 
-void HandlerWithJson::getRawInfo(QString song_id)
+void HandlerWithJson::getMusicInfo()
 {
-    if(jsonGetter)
-    {
-        delete jsonGetter;
-        jsonGetter = nullptr;
-    }
-    if(jsonHandler)
-    {
-        delete jsonHandler;
-        jsonHandler = nullptr;
-    }
-    //qDebug()<<song_id<<endl;
-    QString music_url = QString("http://music.163.com/api/song/detail/?id=%1&ids=[%1]&csrf_token=Method=GET").arg(song_id);
-    //qDebug()<<music_url<<endl;
-    jsonGetter = new JsonGetter(QUrl(music_url),this);
-    connect(jsonGetter, &JsonGetter::signalsError, this, &HandlerWithJson::signalError);
-    connect(jsonGetter, &JsonGetter::signalJsonGotten, this, &HandlerWithJson::onRawInfoGotten);
-    jsonGetter->getJson();
+    QString url = QString("http://music.163.com/api/song/detail/?id=%1&ids=[%2]")
+            .arg(musicInfo->musicID)
+            .arg(musicInfo->musicID);
+    jsonGetter = new JsonGetter(QUrl(url), this);
+    connect(jsonGetter, &JsonGetter::JsonGotton, this, &HandlerWithJson::onDetailJsonGotton);
+    connect(jsonGetter, &JsonGetter::errorOccurred, this, &HandlerWithJson::handleError);
+    jsonGetter->start();
 }
 
-void HandlerWithJson::parseRawInfo()
+void HandlerWithJson::onDetailJsonGotton(QString json)
 {
-    if(jsonGetter->getJsonString().isEmpty())
+    QString pattern = "(\"dfsId\":)(\\d+)";
+    QRegExp rx(pattern);
+    json.replace(rx, "\\1\"\\2\"");
+
+    jsonParser = new DetailJsonParser(json, musicInfo, this);
+    jsonParser->parse();
+    if(musicInfo->status != -1)
     {
-        delete jsonGetter;
-        jsonGetter = nullptr;
-        return;
+        if(musicInfo->status == 0)
+        {
+            delete jsonGetter;
+            QString url = QString("http://music.163.com/api/album/%1")
+                    .arg(musicInfo->albumId);
+            jsonGetter = new JsonGetter(QUrl(url), this);
+            disconnect(jsonGetter, &JsonGetter::JsonGotton,
+                       this, &HandlerWithJson::onDetailJsonGotton);
+            connect(jsonGetter, &JsonGetter::JsonGotton,
+                    this, &HandlerWithJson::onAlbumJsonGotton);
+            connect(jsonGetter, &JsonGetter::errorOccurred,
+                    this, &HandlerWithJson::handleError);
+            jsonGetter->start();
+        }
+        else
+        {
+            if(musicInfo->status == 1)
+            {
+                musicInfoGotten();
+            }
+            else
+                musicInfo->status = -1;
+        }
     }
-    jsonHandler = new JsonHandler(jsonGetter->getJsonString(), music_info, this);
-    connect(jsonHandler, &JsonHandler::signalMusicInfoGotten, this, &HandlerWithJson::signalMusicInfoGotten);
-    connect(jsonHandler, &JsonHandler::signalJsonhandlerError, this, &HandlerWithJson::signalError);
-    jsonHandler->parseJson();
 }
 
-void HandlerWithJson::onRawInfoGotten()
+void HandlerWithJson::onAlbumJsonGotton(QString json)
 {
-    parseRawInfo();
+    QString pattern = "(\"dfsId\":)(\\d+)";
+    QRegExp rx(pattern);
+    json.replace(rx, "\\1\"\\2\"");
+
+    delete jsonParser;
+    jsonParser = new AlbumJsonParser(json, musicInfo, this);
+    jsonParser->parse();
+    if(musicInfo->status == 1)
+    {
+        musicInfoGotten();
+    }
+    else
+        musicInfo->status = -1;
 }

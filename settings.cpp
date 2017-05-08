@@ -1,153 +1,90 @@
 #include "settings.h"
-#include <QIODevice>
-#include <QDebug>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonValue>
-#include <QJsonParseError>
+#include <QDir>
 
-Settings::Settings(QObject *parent) : QObject(parent)
+Settings::Settings()
 {
-    settingFilePath = QDir::currentPath()+"/settings.json";
-    dir.setPath(settingFilePath);
-    //qDebug()<<dir<<endl;
+    configs = new Configs;
 }
 
-bool Settings::loadLocalSettingFile()
+Settings::~Settings()
 {
-    if (!QFile::exists(settingFilePath))
-    {
-        //qDebug()<<"Settings file not exists!"<<endl;
-        return false;
-    }
 
-    settings_file = new QFile(settingFilePath);
-    if (!settings_file->open(QIODevice::ReadOnly))
-    {
-        delete settings_file;
-        settings_file = nullptr;
-        emit signalSettingsError(tr("Fail to read setting file!"));
-        return false;
-    }
-    QString settings_json = settings_file->readAll();
-    settings_file->close();
-    delete settings_file;
-    settings_file = nullptr;
+}
 
-    QJsonParseError error;
-    QJsonDocument settings_document = QJsonDocument::fromJson(settings_json.toUtf8(), &error);
-    if (error.error == QJsonParseError::NoError)
+void Settings::setStatus(int status)
+{
+    this->status = status;
+}
+
+int Settings::getStatus() const
+{
+    return status;
+}
+
+void Settings::mkDownloadDir()
+{
+    QDir dir;
+    //如果音乐下载目录不存在则创建
+    dir.setPath(configs->downloadDirectory);
+    if(!dir.exists())
     {
-        if(settings_document.isObject())
+        //如果无法创建则发出错误信息
+        if(!dir.mkpath(dir.path()))
         {
-            QJsonObject obj_settings = settings_document.object();
-            if(obj_settings.contains("musicSavePath"))
-            {
-                if(obj_settings["musicSavePath"].isString())
-                    musicSavePath = obj_settings["musicSavePath"].toString();
-                else
-                {
-                    //qDebug()<<"Settings file parse failed!"<<endl;
-                    return false;
-                }
-            }
-            else
-                return false;
-            if(obj_settings.contains("isAlwaysDirectDownload"))
-            {
-                if(obj_settings["isAlwaysDirectDownload"].isBool())
-                    AlwaysDirectDownload = obj_settings["isAlwaysDirectDownload"].toBool();
-                else
-                    return false;
-            }
-            else
-                return false;
-            if(obj_settings.contains("autoHide"))
-            {
-                if(obj_settings["autoHide"].isBool())
-                    autoHide = obj_settings["autoHide"].toBool();
-                else
-                    return false;
-            }
-            else
-                return false;
+            this->status = 3;
         }
-        else
-            return false;
+    }
+}
+
+//读取配置文件并将配置信息同步到主窗口配置变量中，并使配置生效
+void Settings::load()
+{
+    QSettings settings(".163config", QSettings::IniFormat);
+    if(settings.contains("exists"))
+    {
+        configs->registerCode = settings.value("registercode").toString();
+        configs->autoDownload = settings.value("autodownload").toBool();
+        configs->autoHide = settings.value("autohide").toBool();
+        configs->downloadDirectory = settings.value("downloaddirectory").toString();
+        configs->showGuidanceOnStart = settings.value("showguidanceonstart").toBool();
+        configs->quality = settings.value("quality").toInt();
+        configs->useJsonParser = settings.value("usejsonparser").toBool();
     }
     else
-        return false;
-    return true;
+    {
+        configs->autoDownload = true;   //默认配置为开启后台自动下载
+        configs->autoHide = false;  //关闭启动时自动隐藏
+        //音乐下载目录为当前软件目录下的music目录
+        configs->downloadDirectory = QDir::currentPath()+"/music/";
+        configs->showGuidanceOnStart = true; //启动时显示提示
+        configs->quality = 0;  //默认下载高品质音乐
+        configs->useJsonParser = true;  //默认通过json解析
+        this->status = 1;
+    }
+
+    mkDownloadDir();
 }
 
-bool Settings::loadSettings(QString &musicDownloadDir, bool &isAlwaysDirectDownload, bool &autoHide)
+//保存配置信息到本地
+void Settings::save()
 {
-    if(!loadLocalSettingFile())
+    QSettings settings(".163config", QSettings::IniFormat);
+    if(settings.isWritable())
     {
-        //qDebug()<<"Settings file load failed!"<<endl;
-        this->AlwaysDirectDownload = true;
-        this->autoHide = false;
-        this->musicSavePath = QDir::currentPath()+"/music/";
+        settings.setValue("exists", true);
+        settings.setValue("registercode", configs->registerCode);
+        settings.setValue("autodownload", configs->autoDownload);
+        settings.setValue("autohide", configs->autoHide);
+        settings.setValue("downloaddirectory", configs->downloadDirectory);
+        settings.setValue("showguidanceonstart", configs->showGuidanceOnStart);
+        settings.setValue("quality", configs->quality);
+        settings.setValue("usejsonparser", configs->useJsonParser);
+        settings.sync();
+    }
+    else
+    {
+        this->status = 2;
     }
 
-    musicDownloadDir = this->musicSavePath;
-    isAlwaysDirectDownload = this->AlwaysDirectDownload;
-    autoHide = this->autoHide;
-
-    //qDebug()<<musicDownloadDir<<endl;
-    //qDebug()<<isAlwaysDirectDownload<<endl;
-    //qDebug()<<autoHide<<endl;
-
-    dir.setPath(musicSavePath);
-    if(!dir.exists())
-    {
-        //qDebug()<<filepath+"/music"<<endl;
-        if(!dir.mkdir(dir.path()))
-        {
-            emit signalSettingsError(tr("Fail to create music download directory!"));
-            return false;
-        }
-    }
-    return true;
-}
-
-bool Settings::saveSettings(QString &musicDownloadDir, bool &isAlwaysDirectDownload, bool &autoHide)
-{
-    if (QFile::exists(settingFilePath))
-    {
-        QFile::remove(settingFilePath);
-    }
-
-    settings_file = new QFile(settingFilePath);
-    if (!settings_file->open(QIODevice::WriteOnly))
-    {
-        emit signalSettingsError(tr("Fail to save settings!"));
-        return false;
-    }
-
-    QJsonObject obj_settings;
-    obj_settings.insert("musicSavePath", musicDownloadDir);
-    obj_settings.insert("isAlwaysDirectDownload", isAlwaysDirectDownload);
-    obj_settings.insert("autoHide", autoHide);
-
-    QJsonDocument settings_document;
-    settings_document.setObject(obj_settings);
-    QByteArray byteArray = settings_document.toJson(QJsonDocument::Compact);
-    settings_file->write(byteArray);
-    settings_file->flush();
-    settings_file->close();
-    delete settings_file;
-    settings_file = 0;
-
-    dir.setPath(musicDownloadDir);
-    if(!dir.exists())
-    {
-        //qDebug()<<filepath+"/music"<<endl;
-        if(!dir.mkdir(dir.path()))
-        {
-            emit signalSettingsError(tr("Fail to create music download directory!"));
-            return false;
-        }
-    }
-    return true;
+    mkDownloadDir();
 }

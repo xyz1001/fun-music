@@ -4,29 +4,61 @@
 #include <QMessageBox>
 #include <QDebug>
 #include <cctype>
-#include <QDir>
-#include "handlerwithjson.h"
+#include <QTableWidget>
+#include <QTableWidgetItem>
+#include <QFileDialog>
+#include <QTimer>
+#include <QDesktopServices>
+#include "constant.h"
 #include "handlerwithhtml.h"
-
-//TODO 增加下载队列
+#include "handlerwithjson.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
-  //设置安卓UI
-  //ui(new Ui::AndroidMainWindow)
 {
     ui->setupUi(this);
 
-    //载入本地设置
-    settings = new Settings(this);
-    connect(settings, &Settings::signalSettingsError, this, &MainWindow::showError);
-    settings->loadSettings(musicDownloadDir, isAlwaysDirectDownload, isAutoHide);
-    //设置判断条件初始状态
-    //来自剪切板为假
-    isFromClipboard = false;
-    //手动输入歌曲ID解析后不直接下载
-    isDirectDownload = false;
+    ui->tableWidgetMusicsInfo->horizontalHeader()->setStyleSheet("QHeaderView::section{background:skyblue;}");
+    ui->tableWidgetMusicsInfo->verticalHeader()->setStyleSheet("QHeaderView::section{background:skyblue;}");
+    ui->tableWidgetMusicsInfo->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    contextMenu = new QMenu(this);
+    deleteItemAction = new QAction(QIcon(":/image/icon/image/icon/delete.png"), tr("Delete"), this);
+    openFileLocationAction = new QAction(QIcon(":/image/icon/image/icon/openfile.png"), tr("Open file location"), this);
+    retryAction = new QAction(QIcon(":/image/icon/image/icon/retry.png"), tr("Retry"), this);
+    downloadAction = new QAction(QIcon(":/image/icon/image/icon/download.png"), tr("Download"), this);
+    copyToClipboardAction = new QAction(QIcon(":/image/icon/image/icon/copylink.png"), tr("Copy to clipboard"), this);
+    playAction = new QAction(QIcon(":/image/icon/image/icon/play.png"), tr("Play"), this);
+
+    contextMenu->addAction(playAction);
+    contextMenu->addAction(retryAction);
+    contextMenu->addAction(downloadAction);
+    contextMenu->addAction(openFileLocationAction);
+    contextMenu->addAction(copyToClipboardAction);
+    contextMenu->addAction(deleteItemAction);
+    connect(deleteItemAction, &QAction::triggered, this, &MainWindow::onDeleteItemClicked);
+    connect(openFileLocationAction, &QAction::triggered, this, &MainWindow::onOpenFileLocation);
+    connect(retryAction, &QAction::triggered, this, &MainWindow::onRetry);
+    connect(downloadAction, &QAction::triggered, this, &MainWindow::download);
+    connect(copyToClipboardAction, &QAction::triggered, this, &MainWindow::onCopyClicked);
+    connect(playAction, &QAction::triggered, this, &MainWindow::onPlayClicked);
+
+    connect(ui->tableWidgetMusicsInfo, &QTableWidget::customContextMenuRequested,
+            this, &MainWindow::onCustomContextMenuRequested);
+
+    musicsInfo = new QMap<QString, MusicInfo*>;
+    queue = new QQueue<MusicInfo *>;
+
+    //显示帮助并同步“启动时显示帮助”设置
+    if(!(Settings::getSettings().configs->autoHide)
+            && Settings::getSettings().configs->showGuidanceOnStart)
+    {
+        guidance = new Guidance(true, 0);
+        guidance->exec();
+        delete guidance;
+        guidance = nullptr;
+    }
 
     //创建动作
     createAction();
@@ -34,93 +66,84 @@ MainWindow::MainWindow(QWidget *parent) :
     createTrayIcon();
     //设置大小固定
     setFixedSize(size());
-    //设置窗口名称
-    setWindowTitle(tr("163 Music Assistant"));
-
-    //为控件添加名称（本来是为了方便翻译，其实UI文件中的字符串也可以被识别为可翻译字符串）
-    ui->menu_file->setTitle(tr("&File"));   //文件
-    ui->menu_setting->setTitle(tr("&Setting")); //设置
-    ui->menu_about->setTitle(tr("&About")); //关于
-    ui->labelMusicName->setText(tr("Music: ")); //音乐名：
-    ui->labelSingerName->setText(tr("Artist: "));   //歌手名：
-    ui->labelAlbumName->setText(tr("Album: ")); //专辑名：
-    ui->labelInputSongID->setText(tr("Input the Music ID: "));  //手动输入歌曲ID：
-    ui->labelDownloadAddress->setText(tr("Download Address: "));    //下载地址：
-    ui->pushButtonParse->setText(tr("Parse"));  //解析
-    ui->pushButtonParseAndDownload->setText(tr("Parse and Download"));  //解析并下载
-    ui->pushButtonClear->setText(tr("Clear"));  //清空
-    ui->pushButtonCopy->setText(tr("Copy"));    //复制
-    ui->pushButtonDownload->setText(tr("Download"));    //下载
-    ui->pushButtonDownloadTo->setText(tr("Download to..."));    //下载到...
 
     //为窗口菜单添加动作
     ui->menu_file->addAction(quit);
     ui->menu_setting->addAction(options);
+    ui->menu_about->addAction(help);
     ui->menu_about->addAction(aboutSoftware);
     ui->menu_about->addAction(aboutMe);
 
     //关联窗口控件信号及动作
-    connect(ui->pushButtonParse, &QPushButton::clicked, this, &MainWindow::onParseClicked); //点击“解析”按钮时
-    //点击“解析”并下载按钮时
-    connect(ui->pushButtonParseAndDownload, &QPushButton::clicked, this, &MainWindow::onParseAndDownloadClicked);
-    connect(ui->pushButtonClear, &QPushButton::clicked, this, &MainWindow::onClearClicked); //点击“清空”按钮时
     connect(ui->pushButtonCopy, &QPushButton::clicked, this, &MainWindow::onCopyClicked);   //点击“复制按钮”时
     connect(ui->pushButtonDownload, &QPushButton::clicked, this, &MainWindow::onDownloadClicked);   //点击“下载”按钮时
-    //点击“下载到...”按钮时
-    connect(ui->pushButtonDownloadTo, &QPushButton::clicked, this, &MainWindow::onDownloadToClicked);
+    connect(ui->pushButtonPlay, &QPushButton::clicked, this, &MainWindow::onPlayClicked);
+    connect(ui->pushButtonDeleteAll, &QPushButton::clicked, this, &MainWindow::onClearAllClicked);
+    connect(ui->pushButtonDownloadAll, &QPushButton::clicked, this, &MainWindow::onDownloadAllClicked);
+    connect(ui->pushButtonRetryAll, &QPushButton::clicked, this, &MainWindow::onRetryAllClicked);
+    //点击音乐信息列表某一行时
+    connect(ui->tableWidgetMusicsInfo, &QTableWidget::currentCellChanged,
+            this, &MainWindow::onTableWidgetRowSelected);
+
 
     //设置剪贴板监控
     clipboard = QApplication::clipboard();
     clipboardMonitor = new ClipboardMonitor(clipboard, this);
     //关联剪贴板内容改变事件及对应处理动作
-    connect(clipboard, &QClipboard::dataChanged, clipboardMonitor, &ClipboardMonitor::onClipboardChanged);
+    connect(clipboard, &QClipboard::dataChanged, clipboardMonitor,
+            &ClipboardMonitor::onClipboardChanged);
     //关联剪贴板改变内容为包含网易云音乐歌曲id链接事件和对应处理动作
     connect(clipboardMonitor, &ClipboardMonitor::signalNewSongIDCatched, this,
             &MainWindow::onNewSongIDCatchedFromClipboard);
 
     //关联程序运行信息和错误事件及气泡显示动作
     connect(this, &MainWindow::signalInfo, this, &MainWindow::showInfo);
-    connect(this, &MainWindow::signalError, this, &MainWindow::showError);
+    connect(this, &MainWindow::signalError, this, &MainWindow::HandleError);
 
     //选项窗口
     option = new Options(this);
     option->hide();
-    //qDebug()<<musicDownloadDir<<endl;
-    option->loadSettings(musicDownloadDir, isAlwaysDirectDownload, isAutoHide);
-    //设置改变时进行相应处理
-    connect(option, &Options::signalUpdateSettings, this, &MainWindow::onSettingsChanged);
+    option->loadConfigs();
 
     //启动自动隐藏时显示气泡
-    if(isAutoHide)
+    if(Settings::getSettings().configs->autoHide)
+    {
+        //qDebug()<<"running...\n";
         emit signalInfo(tr("163 Music Download Assistant is running background..."));
+    }
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+    if(guidance)
+        delete guidance;
 }
 
 void MainWindow::createAction()
 {
     //退出
-    quit = new QAction(tr("&Quit"), this);
+    quit = new QAction(QIcon(":/image/icon/image/icon/quit.png"), tr("&Quit"), this);
     connect(quit, &QAction::triggered, qApp, &QApplication::quit);
     //选项
-    options = new QAction(tr("&Options"), this);
+    options = new QAction(QIcon(":/image/icon/image/icon/options.png"), tr("&Options"), this);
     connect(options,&QAction::triggered, this, &MainWindow::onOptionsTriggered);
     //关于本软件
-    aboutSoftware = new QAction(tr("About &software"), this);
+    aboutSoftware = new QAction(QIcon(":/image/icon/image/icon/about.png"), tr("About &software"), this);
     connect(aboutSoftware, &QAction::triggered, this, &MainWindow::onAboutSoftwareTriggered);
     //关于我
-    aboutMe = new QAction(tr("About &me"), this);
+    aboutMe = new QAction(QIcon(":/image/icon/image/icon/aboutme.png"), tr("About &me"), this);
     connect(aboutMe, &QAction::triggered, this, &MainWindow::onAboutMeTriggered);
+    //帮助
+    help = new QAction(QIcon(":/image/icon/image/icon/help.png"), tr("&Help"), this);
+    connect(help, &QAction::triggered, this, &MainWindow::onHelpTriggered);
 }
 
 void MainWindow::createTrayIcon()
 {
     trayicon = new QSystemTrayIcon(this);
     //创建QIcon对象，参数是图标资源，值为项目的资源文件中图标的地址
-    QIcon icon(":/image/163MusicAssistant.png");
+    QIcon icon(":/image/icon/image/icon/163MusicAssistant.png");
 
     trayiconMenu = new QMenu(this);
     //为托盘菜单添加菜单项
@@ -141,107 +164,252 @@ void MainWindow::createTrayIcon()
     connect(trayicon, &QSystemTrayIcon::activated, this, &MainWindow::onSystemTrayIconClicked);
 }
 
-bool MainWindow::checkSongID(QString song_id)
+void MainWindow::download()
 {
-    //如果歌曲ID为空返回验证失败
-    if(song_id.isEmpty())
-    {
-        //提示“请先输入歌曲ID或包含歌曲ID的链接”
-        emit signalError("Please input song ID or link contained song Id first!");
-        return false;
-    }
+    QTimer::singleShot(0, currentMusicInfo->dataGetter, &DataGetter::downloadMP3);
+}
 
-    //如果歌曲ID中包括非数字，返回验证失败
-    for(auto i:song_id)
+void MainWindow::startParse()
+{
+    for(int i=0; i<MAX_HANDLING_COUNT-handlingCount && !(queue->isEmpty()); ++i)
     {
-        if(!(i.isDigit()))
+        //qDebug()<<MAX_HANDLING_COUNT<<'/'<<handlingCount<<endl;
+        ++handlingCount;
+        MusicInfo *musicInfo = queue->takeFirst();
+        if(wildPointer.contains(musicInfo))
         {
-            //提示“请输入正确的歌曲ID”
-            emit signalError("Please input right song ID!");
-            return false;
+            --handlingCount;
+            QTimer::singleShot(0, this, &MainWindow::startParse);
+            return;
         }
-    }
-    return true;
-}
-
-bool MainWindow::checkDownloadAddress()
-{
-    //如果下载地址为空，提示“地址为空”并返回验证失败
-    if(ui->lineEditDownloadAddress->text().isEmpty())
-    {
-        emit signalError(tr("The download link is empty"));
-        return false;
-    }
-    return true;
-}
-
-void MainWindow::parse()
-{
-    //如果dataGetter对象已存在，则将其删除
-    if(dataGetter)
-    {
-        delete dataGetter;
-        dataGetter = 0;
-    }
-    //如果歌曲ID验证通过
-    if(checkSongID(ui->lineEditSongID->text()))
-    {
         //提示正在解析中
-        emit signalInfo(tr("Parsing..."));
+        //emit signalInfo(tr("Parsing..."));
         //通过获取www.loadfield.com/163/song.php上Html信息进行解析
-        dataGetter = new HandlerWithHtml(this);
-        //通过获取Json进行解析
-        //dataGetter = new HandlerWithJson(this);
+        if(Settings::getSettings().configs->useJsonParser)
+            musicInfo->dataGetter = new HandlerWithJson(musicInfo, this, this);
+        else
+            musicInfo->dataGetter = new HandlerWithHtml(musicInfo, this, this);
 
-        //关联歌曲信息获取完成信号和槽
-        connect(dataGetter, &DataGetter::signalMusicInfoGotten, this, &MainWindow::onMusicInfoGotten);
-        //关联歌曲图片获取完成信号和槽
-        connect(dataGetter, &DataGetter::signalPictureGotten, this, &MainWindow::onPictureGotten);
-        //关联歌曲下载进度信号和槽
-        connect(dataGetter, &DataGetter::signalDownloadProgress, this, &MainWindow::onDownloadProgress);
-        //关联MP3下载完成信号和槽
-        connect(dataGetter, &DataGetter::signalMP3downloaded, this, &MainWindow::onMP3Downloaded);
+        //处理完成
+        connect(musicInfo->dataGetter, &DataGetter::signalFinished, this, &MainWindow::onFinished);
+        connect(musicInfo->dataGetter, &DataGetter::signalMusicInfoGotten, this, &MainWindow::onMusicInfoGotten);
+        connect(musicInfo->dataGetter, &DataGetter::signalPictureGotten, this, &MainWindow::onPictureGotten);
         //关联提示信息信号和槽
-        connect(dataGetter, &DataGetter::signalInfo, this, &MainWindow::showInfo);
+        connect(musicInfo->dataGetter, &DataGetter::signalInfo, this, &MainWindow::showInfo);
         //关联错误信息和槽
-        connect(dataGetter, &DataGetter::signalError, this, &MainWindow::showError);
+        connect(musicInfo->dataGetter, &DataGetter::signalError, this, &MainWindow::HandleError);
+        //更新歌曲信息列表
+        connect(musicInfo->dataGetter, &DataGetter::signalTableWidgetMusicInfoUpdate,
+                this, &MainWindow::updateTableWidgetMusicInfo);
         //qDebug()<<ui->lineEditSongID->text();
         //开始获取原始数据信息
-        dataGetter->getRawInfo(ui->lineEditSongID->text());
+        QTimer::singleShot(0, musicInfo->dataGetter, &DataGetter::startHandle);
     }
 }
 
-void MainWindow::download(QString musicDownloadDirectory)
+void MainWindow::onFinished()
 {
-    //qDebug()<<musicDownloadDirectory<<endl;
-    //如果下载地址验证通过，开始下载mp3
-    if(checkDownloadAddress())
+    --handlingCount;
+    showMusicInfo();
+    if(Settings::getSettings().getStatus() >= 0)
     {
-        dataGetter->downloadMP3(ui->lineEditDownloadAddress->text(),    //下载地址文本框内的下载地址
-                                     musicDownloadDirectory + (*(this->music_info))["name"] +".mp3",    //音乐文件保存目录+歌曲名+文件后缀.mp3
-                                     this);
+        QTimer::singleShot(0, this, &MainWindow::startParse);
     }
-   //else
-        //qDebug()<<"errer"<<endl;
 }
 
-void MainWindow::clearInfo()
+void MainWindow::onMusicInfoGotten(MusicInfo *musicInfo)
 {
-    //清空歌曲ID输入框由clear动作函数自行执行，避免再次点击parse按钮时也会清空歌曲ID输入框
-    //清空音乐名和提示
-    ui->labelMusic->clear();
-    ui->labelMusic->setStatusTip("");
-    //清空歌手名和提示
-    ui->labelSinger->clear();
-    ui->labelSinger->setStatusTip("");
-    //清空专辑名和提示
-    ui->labelAlbum->clear();
-    ui->labelAlbum->setStatusTip("");
-    //清空图片
-    ui->labelPicture->clear();
-    //清空下载地址和提示
-    ui->lineEditDownloadAddress->clear();
-    ui->lineEditDownloadAddress->setStatusTip("");
+    if(currentMusicInfo == musicInfo)
+        showMusicInfo();
+}
+
+void MainWindow::onPictureGotten(MusicInfo *musicInfo)
+{
+    //显示图片
+    if(currentMusicInfo == musicInfo)
+    {
+        ui->labelPicture->clear();
+        ui->labelPicture->setPixmap(currentMusicInfo->pic->scaled(ui->labelPicture->size()));
+    }
+}
+
+void MainWindow::onTableWidgetRowSelected(int row)
+{
+    clearMusicInfo();
+    if(row >= 0 && row < musicsInfo->size())
+    {
+        currentMusicInfo = (*musicsInfo)[ui->tableWidgetMusicsInfo->item(row, 0)->text()];
+        if(currentMusicInfo->status >= 1 || currentMusicInfo->status == -2)
+        {
+            showMusicInfo();
+        }
+        else
+        {
+            clearMusicInfo();
+        }
+    }
+}
+
+void MainWindow::updateTableWidgetMusicInfo(int row, int column, QString info)
+{
+    //qDebug()<<row<<','<<column<<':'<<info<<endl;
+    ui->tableWidgetMusicsInfo->item(row, column)->setText(info);
+    MusicInfo *musicInfo = (*musicsInfo)[ui->tableWidgetMusicsInfo->item(row, 0)->text()];
+    if(musicInfo->status < 0)
+    {
+        for(int i=0; i<COLUMN_COUNT; ++i)
+        {
+            ui->tableWidgetMusicsInfo->item(row, i)->setTextColor(QColor(Qt::red));
+        }
+        musicInfo->downloadProgressBar->setTextVisible(false);
+        musicInfo->downloadProgressBar->setStyleSheet("border:1px solid #FFFFFF;"
+                                                      "background: red;"
+                                                      "color:rgb(255,255,0);");
+    }
+}
+
+void MainWindow::onDeleteItemClicked()
+{
+    if(currentMusicInfo->status == 2)
+    {
+        int quality = Settings::getSettings().configs->quality <= currentMusicInfo->downloadInfo.size()-1?
+                    Settings::getSettings().configs->quality : currentMusicInfo->downloadInfo.size()-1;
+        QString filepath = QString("%1/%2 - %3.%4")
+                .arg(Settings::getSettings().configs->downloadDirectory)
+                .arg(currentMusicInfo->artist)
+                .arg(currentMusicInfo->name)
+                .arg(currentMusicInfo->downloadInfo.at(quality).extension);
+        QFile file(filepath);
+        if(file.exists())
+        {
+            switch(QMessageBox::question(this, tr("Prompt"),
+                                         tr("Delete the song file that is downloaded along with?"),
+                                         tr("Yes"), tr("No")))
+            {
+            case 0:
+                file.remove();
+                break;
+            case 1:
+            default:
+                break;
+            }
+        }
+    }
+    delete currentMusicInfo->dataGetter;
+    delete currentMusicInfo->downloadProgressBar;
+    delete currentMusicInfo->pic;
+    wildPointer.insert(currentMusicInfo);
+    musicsInfo->remove(QString::number(currentMusicInfo->musicID));
+
+    int row = currentMusicInfo->row;
+    delete currentMusicInfo;
+    currentMusicInfo = nullptr;
+    foreach (auto i, (*musicsInfo))
+    {
+        if(i->row > row)
+        {
+            --(i->row);
+        }
+    }
+    for(int i=0; i<COLUMN_COUNT; ++i)
+    {
+        delete ui->tableWidgetMusicsInfo->item(row, i);
+    }
+    ui->tableWidgetMusicsInfo->removeRow(row);
+
+    if(row >= ui->tableWidgetMusicsInfo->rowCount())
+    {
+        --row;
+    }
+    if(row != -1)
+    {
+        ui->tableWidgetMusicsInfo->selectRow(row);
+        onTableWidgetRowSelected(row);
+    }
+}
+
+void MainWindow::onOpenFileLocation()
+{
+    QDesktopServices::openUrl(QUrl(QString("file:///%1")
+                                   .arg(Settings::getSettings().configs->downloadDirectory)));
+}
+
+void MainWindow::onRetry()
+{
+    QString musicId = QString::number(currentMusicInfo->musicID);
+    onDeleteItemClicked();
+    onNewSongIDCatchedFromClipboard(musicId);
+}
+
+void MainWindow::onCustomContextMenuRequested(QPoint pos)
+{
+    QTableWidgetItem *i = ui->tableWidgetMusicsInfo->itemAt(pos);
+    if(i != 0)
+    {
+        contextMenu->exec(QCursor::pos());
+    }
+}
+
+void MainWindow::onDownloadAllClicked()
+{
+    foreach(auto i , (*musicsInfo))
+    {
+        if(i->status == 1)
+        {
+            i->dataGetter->downloadMP3();
+        }
+    }
+}
+
+void MainWindow::onRetryAllClicked()
+{
+    QList<QString> musicID((*musicsInfo).keys());
+
+    onClearAllClicked();
+
+    foreach (auto i, musicID)
+    {
+        onNewSongIDCatchedFromClipboard(i);
+    }
+}
+
+void MainWindow::onClearAllClicked()
+{
+    while(ui->tableWidgetMusicsInfo->rowCount() > 0)
+    {
+        for(int i=0; i<COLUMN_COUNT; ++i)
+        {
+            delete ui->tableWidgetMusicsInfo->item(0, i);
+        }
+        ui->tableWidgetMusicsInfo->removeRow(0);
+
+    }
+    while(musicsInfo->size() > 0)
+    {
+        if(currentMusicInfo->dataGetter != nullptr)
+        {
+            delete currentMusicInfo->dataGetter;
+            currentMusicInfo->dataGetter = nullptr;
+        }
+        if(currentMusicInfo->downloadProgressBar != nullptr)
+        {
+            delete currentMusicInfo->downloadProgressBar;
+            currentMusicInfo->downloadProgressBar = nullptr;
+        }
+        if(currentMusicInfo->pic != nullptr)
+        {
+            delete currentMusicInfo->pic;
+            currentMusicInfo->pic = nullptr;
+        }
+        wildPointer.insert(currentMusicInfo);
+        musicsInfo->remove(QString::number(currentMusicInfo->musicID));
+
+        delete currentMusicInfo;
+        currentMusicInfo = nullptr;
+
+        currentMusicInfo = *(*musicsInfo).begin();
+    }
+    currentMusicInfo = nullptr;
 }
 
 void MainWindow::onSystemTrayIconClicked(QSystemTrayIcon::ActivationReason reason)
@@ -282,6 +450,12 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 }
 
+void MainWindow::onInitConfigureError(QString error)
+{
+    QMessageBox::critical(this, tr("Error"), error, QMessageBox::Ok);
+    exit(-1);
+}
+
 void MainWindow::onAboutSoftwareTriggered()
 {
     //关于本软件中介绍信息
@@ -304,164 +478,213 @@ void MainWindow::onAboutMeTriggered()
     QMessageBox::about(this, tr("AboutMe"), introduce);
 }
 
-
-void MainWindow::onParseClicked()
+void MainWindow::onHelpTriggered()
 {
-    //清空先前信息
-    clearInfo();
-    //解析
-    parse();
-}
-
-void MainWindow::onParseAndDownloadClicked()
-{
-    //开启解析后直接下载
-    isDirectDownload = true;
-    //清空先前信息
-    clearInfo();
-    //解析
-    parse();
-}
-
-void MainWindow::onClearClicked()
-{
-    //清空歌曲ID输入框
-    ui->lineEditSongID->clear();
-    //清除歌曲信息
-    clearInfo();
+    if(!guidance)
+        guidance = new Guidance(0);
+    guidance->show();
 }
 
 void MainWindow::onCopyClicked()
 {
-    //下载地址验证通过时
-    if(checkDownloadAddress())
-    {
-        //复制下载地址框中下载地址至系统剪贴板
-        clipboard->setText(ui->lineEditDownloadAddress->text());
-        //显示提示信息
-        emit signalInfo(tr("Copyed to the system clipboard"));
-    }
+
+    //复制下载地址框中下载地址至系统剪贴板
+    clipboard->setText(ui->lineEditDownloadAddress->text());
+    //显示提示信息
+    emit signalInfo(tr("Copyed to the system clipboard"));
 }
 
 void MainWindow::onDownloadClicked()
 {
     //下载
-   download(musicDownloadDir);
+    download();
 }
 
-void MainWindow::onDownloadToClicked()
+void MainWindow::onPlayClicked()
 {
-    //弹出文件保存位置对话框并下载至选定的位置
-    download(option->chooseMusicDownloadDir());
-}
-
-void MainWindow::onNewSongIDCatchedFromClipboard(QString song_id)
-{
-    if(checkSongID(song_id) && song_id != ui->lineEditSongID->text())
+    int quality = Settings::getSettings().configs->quality <= currentMusicInfo->downloadInfo.size()-1?
+                Settings::getSettings().configs->quality : currentMusicInfo->downloadInfo.size()-1;
+    QString downloadPath = QString("%1%2 - %3.%4")
+            .arg(Settings::getSettings().configs->downloadDirectory)
+            .arg(currentMusicInfo->artist)
+            .arg(currentMusicInfo->name)
+            .arg(currentMusicInfo->downloadInfo.at(quality).extension);
+    if(QFile::exists(downloadPath))
     {
-        clearInfo();
-        ui->lineEditSongID->setText(song_id);
-        parse();
-        isFromClipboard = true;
+        QDesktopServices::openUrl(QUrl(QString("file:///") + downloadPath));
     }
-}
-
-void MainWindow::onMusicInfoGotten(QMap<QString, QString> *music_info)
-{
-    //保存获取的歌曲信息表
-    this->music_info = music_info;
-
-    //依次将获取的歌曲信息在主窗口展示出来
-    //qDebug()<<(*music_info)["songUrl"];
-    //显示音乐名并设置超链接
-    ui->labelMusic->setText((*music_info)["name"]);
-    //开启链接可用
-    ui->labelMusic->setOpenExternalLinks(true);
-    //如果获取到了别名则在音乐名后添加音乐别名
-    if((*music_info).contains("alias") && !(*music_info)["alias"].isEmpty())
-        ui->labelMusic->setText(ui->labelMusic->text() + "("
-                                + (*music_info)["alias"] + ")");
-    ui->labelMusic->setStatusTip(ui->labelMusic->text());
-    ui->labelMusic->setText("<a href=\"" + (*music_info)["songUrl"] + "\">"
-                            + ui->labelMusic->text()
-                            + "</a>");
-    //qDebug()<<ui->labelMusic->text();
-    //显示歌手名并设置超链接
-    ui->labelSinger->setOpenExternalLinks(true);
-    ui->labelSinger->setText("<a href=\"" + (*music_info)["artistsUrl"] + "\">"
-                            + (*music_info)["artists"]
-                            + "</a>");
-    ui->labelSinger->setStatusTip((*music_info)["artists"]);
-    //显示专辑名并设置超链接
-    ui->labelAlbum->setOpenExternalLinks(true);
-    ui->labelAlbum->setText("<a href=\"" + (*music_info)["albumUrl"] + "\">"
-            + (*music_info)["album"]
-            + "</a>");
-    ui->labelAlbum->setStatusTip((*music_info)["album"]);
-    //显示下载地址
-    ui->lineEditDownloadAddress->setText((*music_info)["mp3Url"]);
-    ui->lineEditDownloadAddress->setStatusTip(ui->lineEditDownloadAddress->text());
-
-    //开始下载歌曲图片
-    dataGetter->getPicture((*music_info)["picUrl"]);
-
-    //如果歌曲ID来自剪切板且开启了自动下载，开始下载音乐
-    if(isFromClipboard)
+    else
     {
-        //重置“来自剪切板”
-        isFromClipboard = false;
-        if(isAlwaysDirectDownload)
+        int button = QMessageBox::warning(this, tr("File does not exist"),
+                                          tr("File is missing, maybe caused by file is not downloaded,\n"
+                                             " file is deleted or download path is changed.\n"
+                                             " download it now?"), tr("yes"),tr("no"), 0);
+        if(button == 0)
         {
-            download(musicDownloadDir);
+            download();
         }
     }
-    //如果当前为解析并直接下载，开始下载音乐
-    else if(isDirectDownload)
+}
+
+void MainWindow::onNewSongIDCatchedFromClipboard(QString songID)
+{
+    int musicID = songID.toInt();
+    foreach (auto i, (*musicsInfo))
     {
-        //重置“立即下载”
-        isDirectDownload = false;
-        download(musicDownloadDir);
+        if(i->musicID == musicID)
+        {
+            ui->tableWidgetMusicsInfo->selectRow(i->row);
+            onTableWidgetRowSelected(i->row);
+            return;
+        }
+    }
+
+    int order = musicsInfo->size();
+    ui->tableWidgetMusicsInfo->setRowCount(order + 1);
+
+    (*musicsInfo)[songID] = new MusicInfo;
+    (*musicsInfo)[songID]->musicID = musicID;
+    (*musicsInfo)[songID]->status = 0;
+    (*musicsInfo)[songID]->downloadProgressBar = new QProgressBar(this);
+    (*musicsInfo)[songID]->downloadProgressBar->setAlignment(Qt::AlignCenter);
+    (*musicsInfo)[songID]->row = order;
+    queue->push_back((*musicsInfo)[songID]);
+
+
+    ui->tableWidgetMusicsInfo->setItem(order, MUSIC_ID, new QTableWidgetItem(songID));
+    ui->tableWidgetMusicsInfo->setItem(order, MUSIC_NAME, new QTableWidgetItem("Unknown"));
+    ui->tableWidgetMusicsInfo->setItem(order, MUSIC_DURATION, new QTableWidgetItem("Unknown"));
+    ui->tableWidgetMusicsInfo->setItem(order, MUSIC_SIZE, new QTableWidgetItem("Unknown"));
+    ui->tableWidgetMusicsInfo->setItem(order, DOWNLOAD_PROGRESS, new QTableWidgetItem(""));
+    ui->tableWidgetMusicsInfo->setCellWidget(order, DOWNLOAD_PROGRESS, (*musicsInfo)[songID]->downloadProgressBar);
+    ui->tableWidgetMusicsInfo->setItem(order, STATUS, new QTableWidgetItem(tr("Waiting")));
+    for(int i=0; i<COLUMN_COUNT; ++i)
+    {
+        QTableWidgetItem *item = ui->tableWidgetMusicsInfo->item(order, i);
+        if(item != nullptr)
+            item->setTextAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+    }
+
+    currentMusicInfo = (*musicsInfo)[songID];
+    ui->tableWidgetMusicsInfo->selectRow(order);
+
+    if(Settings::getSettings().getStatus() >= 0)
+    {
+        QTimer::singleShot(0, this, &MainWindow::startParse);
     }
 }
 
-void MainWindow::onPictureGotten(QPixmap *pixmap)
+void MainWindow::showMusicInfo()
 {
-    //当图片下载完成后将图片显示在主窗口，并调整其大小为图片显示空间大小
-    ui->labelPicture->setPixmap((*pixmap).scaled(ui->labelPicture->size()));
+    //依次将获取的歌曲信息在主窗口展示出来
+    //qDebug()<<currentMusicInfo->["songUrl"];
+    //显示音乐名并设置超链接
+    ui->labelMusic->setText(currentMusicInfo->name);
+    //开启链接可用
+    ui->labelMusic->setOpenExternalLinks(true);
+    //显示音乐名和音乐别名
+    ui->labelMusic->setText(QString("<a href=\"http://music.163.com/#/song?id=%1\">%2</a>%3")
+                            .arg(currentMusicInfo->musicID)
+                            .arg(currentMusicInfo->name)
+                            .arg(currentMusicInfo->alais));
+    ui->labelMusic->setStatusTip(currentMusicInfo->name + currentMusicInfo->alais);
+
+    //显示歌手名
+    ui->labelSinger->setOpenExternalLinks(true);
+    switch (currentMusicInfo->artistId.size())
+    {
+    case 1:
+        ui->labelSinger->setText(QString("<a href=\"http://music.163.com/#/artist?id=%1\">%2</a>")
+                                 .arg(currentMusicInfo->artistId.at(0))
+                                 .arg(currentMusicInfo->artist));
+        break;
+    case 2:
+        ui->labelSinger->setText(QString("<a href=\"http://music.163.com/#/artist?id=%1\">%2</a>"
+                                         ",<a href=\"http://music.163.com/#/artist?id=%3\">%4</a>")
+                                 .arg(currentMusicInfo->artistId.at(0))
+                                 .arg(currentMusicInfo->artists.at(0))
+                                 .arg(currentMusicInfo->artistId.at(1))
+                                 .arg(currentMusicInfo->artists.at(1)));
+        break;
+    default:
+        ui->labelSinger->setText(currentMusicInfo->artist);
+        break;
+    }
+    QString artists;
+    foreach (auto i, currentMusicInfo->artists)
+    {
+        artists += (i + ",");
+    }
+    artists.resize(artists.size()-1);
+    ui->labelSinger->setStatusTip(artists);
+
+    //显示专辑名
+    if(currentMusicInfo->albumId != 0)
+    {
+        ui->labelAlbum->setOpenExternalLinks(true);
+        ui->labelAlbum->setText(QString("<a href=\"http://music.163.com/#/album?id=%1\">%2</a>")
+                                .arg(currentMusicInfo->albumId)
+                                .arg(currentMusicInfo->album));
+    }
+    else
+    {
+        ui->labelAlbum->setText(currentMusicInfo->album);
+    }
+    ui->labelAlbum->setStatusTip(currentMusicInfo->album);
+
+    //显示下载地址
+    if(currentMusicInfo->downloadInfo.size() != 0)
+    {
+        ui->lineEditDownloadAddress->setText(currentMusicInfo->downloadInfo[0].mp3Url);
+        ui->lineEditDownloadAddress->setStatusTip(currentMusicInfo->downloadInfo[0].mp3Url);
+    }
+
+    //显示图片
+    if(currentMusicInfo->pic != nullptr)
+    {
+        ui->labelPicture->clear();
+        ui->labelPicture->setPixmap(currentMusicInfo->pic->scaled(ui->labelPicture->size()));
+    }
+    else
+        ui->labelPicture->setText(tr("Picture is downloading..."));
+
+    ui->pushButtonCopy->setEnabled(true);
+    ui->pushButtonDownload->setEnabled(true);
+    ui->pushButtonPlay->setEnabled(true);
 }
 
-void MainWindow::onDownloadProgress()
+void MainWindow::clearMusicInfo()
 {
-    //TODO 显示下载进度
-}
-
-void MainWindow::onMP3Downloaded()
-{
-    //当音乐下载完成时提示“成功下载信息”
-    emit signalInfo((*(this->music_info))["name"] +".mp3" + tr(" download successfully!"));
-}
-
-void MainWindow::onSettingsChanged(QString musicSaveDir, bool autoDownload, bool autoHide)
-{
-    //当修改设置时修改设置变量
-    //TODO 将设置变量整合至Options类中，避免出现多处设置变量
-    this->musicDownloadDir = musicSaveDir;
-    this->isAlwaysDirectDownload = autoDownload;
-    this->isAutoHide = autoHide;
-    //将设置同步保存至本地配置文件
-    settings->saveSettings(musicSaveDir, autoDownload, autoHide);
+    ui->labelMusic->clear();
+    ui->labelMusic->setStatusTip("");
+    ui->labelSinger->clear();
+    ui->labelSinger->setStatusTip("");
+    ui->labelAlbum->clear();
+    ui->labelAlbum->setStatusTip("");
+    ui->labelPicture->clear();
+    ui->lineEditDownloadAddress->clear();
+    ui->lineEditDownloadAddress->setStatusTip("");
+    ui->pushButtonCopy->setEnabled(false);
+    ui->pushButtonDownload->setEnabled(false);
+    ui->pushButtonPlay->setEnabled(false);
 }
 
 void MainWindow::showInfo(QString info)
 {
     //托盘显示提示信息，显示时间为1s（显示时间不对？）
     trayicon->showMessage(tr("163 Music Assistant"), info,
-                          QSystemTrayIcon::Information, 100);
+                          QSystemTrayIcon::Information, 1000);
 }
 
-void MainWindow::showError(QString error)
+void MainWindow::HandleError(QString error )
 {
     //托盘显示错误信息，显示时间为3s
     trayicon->showMessage(tr("163 Music Assistant"), error,
                           QSystemTrayIcon::Warning, 3000);
+
+    --handlingCount;
+    if(!(Settings::getSettings().getStatus() >= 0))
+    {
+        startParse();
+    }
 }

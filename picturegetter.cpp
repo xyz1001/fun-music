@@ -3,44 +3,81 @@
 #include <QDebug>
 
 PictureGetter::PictureGetter(QUrl url, QObject *parent)
-    :QObject(parent)
+    :NetworkAccess(url, parent)
 {
     pixmap = new QPixmap;
-    this->url=url;
-    manager=new QNetworkAccessManager(this);
+    success = false;
+    timer.setInterval(20000);
 }
+
+PictureGetter::~PictureGetter()
+{
+    if(reply != nullptr)
+    {
+        delete reply;
+        reply = nullptr;
+    }}
 
 QPixmap *PictureGetter::getPixmap()
 {
-    if(pixmap==nullptr)
-    {
-        emit signalError(tr("No pixmap is got"));
-        return nullptr;
-    }
     return pixmap;
 }
 
-void PictureGetter::getPicture()
+void PictureGetter::sendRequest()
 {
-    reply=manager->get(QNetworkRequest(url));
-    //qDebug()<<url<<endl;
-    connect(reply, &QNetworkReply::finished, this, &PictureGetter::PictureReplyFinished);
+    ++retryTime;
+    if(reply != nullptr)
+    {
+        delete reply;
+        reply = nullptr;
+    }
+    reply=networkManager->get(QNetworkRequest(url));
+    connect(reply, &QNetworkReply::finished, this, &PictureGetter::onReplyFinished);
+    timer.start();
 }
 
-void PictureGetter::PictureReplyFinished()
+void PictureGetter::start()
 {
+    sendRequest();
+}
+
+void PictureGetter::onReplyFinished()
+{
+    timer.stop();
+    disconnect(reply, &QNetworkReply::finished, this, &PictureGetter::onReplyFinished);
     if(reply->error() == QNetworkReply::NoError)
     {
-        pixmap->loadFromData(reply->readAll());
-        pixmap->save("pic.jpg");
+        QByteArray datagram = reply->readAll();
+        if(datagram.isEmpty() || !(pixmap->loadFromData(datagram)))
+        {
+            pixmap->load(":/image/pic/image/pic/error.png");
+        }
+        //pixmap->save("pic.jpg");
         emit signalPictureDownloaded(pixmap);
-        //qDebug()<<"OK"<<endl;
+    }
+    else if(retryTime < 3)
+    {
+        start();
     }
     else
     {
-        emit signalError(tr("Image downloaded failure!"));
+        pixmap->load(":/image/pic/image/pic/error.png");
+        emit signalPictureDownloaded(pixmap);
     }
-    reply->deleteLater();
+}
+
+void PictureGetter::onTimeOut()
+{
+    disconnect(reply, &QNetworkReply::finished, this, &PictureGetter::onReplyFinished);
+    if(retryTime >= 3)
+    {
+        pixmap->load(":/image/pic/image/pic/error.png");
+        emit signalPictureDownloaded(pixmap);
+    }
+    else
+    {
+        start();
+    }
 }
 
 

@@ -1,21 +1,30 @@
 #ifndef HANDLERWITHJSON_H
 #define HANDLERWITHJSON_H
 
+#include <QObject>
 #include "datagetter.h"
+#include "jsongetter.h"
+#include "jsonparser.h"
+#include "detailjsonparser.h"
+#include "albumjsonparser.h"
 
 //实现DataGetter，通过Json获取歌曲信息，需要实现getRawInfo，parseRawInfo和onRawInfoGotten函数
 class HandlerWithJson : public DataGetter
 {
     Q_OBJECT
-public:
-    explicit HandlerWithJson(QObject *parent = 0);
+private:
+    JsonGetter *jsonGetter;
+    JsonParser *jsonParser;
 
-    void getRawInfo(QString song_id);
-    void parseRawInfo();
+public:
+    explicit HandlerWithJson(MusicInfo *musicInfo, QWidget *widget, QObject *parent = 0);
+    void getMusicInfo();
+
 signals:
 
 public slots:
-    void onRawInfoGotten();
+    void onDetailJsonGotton(QString json);
+    void onAlbumJsonGotton(QString json);
 };
 
 #endif // HANDLERWITHJSON_H
