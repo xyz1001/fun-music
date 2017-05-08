@@ -127,20 +127,20 @@
     </rect>
    </property>
    <property name="text">
-    <string>a. From the 163 Music Client</string>
+    <string>a. From the Netease Cloud Music Client</string>
    </property>
   </widget>
   <widget class="QLabel" name="labelFromWeb">
    <property name="geometry">
     <rect>
      <x>290</x>
-     <y>140</y>
+     <y>136</y>
      <width>241</width>
      <height>20</height>
     </rect>
    </property>
    <property name="text">
-    <string>b. From the 163 Music webpage</string>
+    <string>b. From the Netease Cloud Music webpage</string>
    </property>
   </widget>
   <widget class="QLabel" name="labelStep3">

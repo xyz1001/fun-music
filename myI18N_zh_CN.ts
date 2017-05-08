@@ -97,12 +97,14 @@
     </message>
     <message>
         <location filename="guidance.ui" line="130"/>
-        <source>a. From the 163 Music Client</source>
+        <source>a. From the Netease Cloud Music Client</source>
+        <oldsource>a. From the 163 Music Client</oldsource>
         <translation>1.从网易云音乐客户端复制链接</translation>
     </message>
     <message>
         <location filename="guidance.ui" line="143"/>
-        <source>b. From the 163 Music webpage</source>
+        <source>b. From the Netease Cloud Music webpage</source>
+        <oldsource>b. From the 163 Music webpage</oldsource>
         <translation>2.从网易云音乐网页端复制链接地址</translation>
     </message>
     <message>
@@ -301,10 +303,13 @@
         <translation></translation>
     </message>
     <message>
+        <location filename="mainwindow.ui" line="14"/>
+        <location filename="mainwindow.cpp" line="159"/>
         <location filename="mainwindow.cpp" line="675"/>
         <location filename="mainwindow.cpp" line="682"/>
-        <source>163 Music Assistant</source>
-        <translation>网易云音乐下载助手</translation>
+        <source>Netease Music Assistant</source>
+        <oldsource>163 Music Assistant</oldsource>
+        <translation type="unfinished">网易云音乐助手</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="425"/>
@@ -391,8 +396,9 @@
     <message>
         <location filename="mainwindow.cpp" line="112"/>
         <location filename="mainwindow.cpp" line="447"/>
-        <source>163 Music Download Assistant is running background...</source>
-        <translation>网易云音乐下载助手正在后台运行...</translation>
+        <source>Netease Music Assistant is running background...</source>
+        <oldsource>163 Music Download Assistant is running background...</oldsource>
+        <translation>网易云音乐助手正在后台运行...</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="126"/>
@@ -483,12 +489,6 @@
         <translation>图片下载中...</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="14"/>
-        <location filename="mainwindow.cpp" line="159"/>
-        <source>163 Music Download Assistant</source>
-        <translation>网易云音乐下载助手3.0</translation>
-    </message>
-    <message>
         <source>The download link is empty</source>
         <translation type="vanished">下载链接为空</translation>
     </message>
@@ -502,11 +502,15 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="462"/>
-        <source>Parse the download addresss of musics on 163 Music, even removed musics!
+        <source>Parse the download addresss of musics on Netease Cloud Music, even removed musics and charge musics!
 only for study, prohibit commercial use!
 otherwise it has nothing to do with me.Copyright reserved
 </source>
-        <translation>网易云音乐下载助手可以解析出网易云音乐中的歌曲下载地址，包括已下架歌曲和付费歌曲。
+        <oldsource>Parse the download addresss of musics on 163 Music, even removed musics!
+only for study, prohibit commercial use!
+otherwise it has nothing to do with me.Copyright reserved
+</oldsource>
+        <translation>网易云音乐助手可以解析出网易云音乐中的歌曲下载地址，包括已下架歌曲和付费歌曲。
 本软件仅供学习交流使用，禁止用于商业用途，负责由此引发的一切后果均与作者无关！
 作者保留所有权利</translation>
     </message>
@@ -518,13 +522,13 @@ otherwise it has nothing to do with me.Copyright reserved
     <message>
         <location filename="mainwindow.cpp" line="474"/>
         <source>Zix
-My Blog: http://www.xyz520.cn
+My Blog: http://www.xyz1001.xyz
 Welcome to visit</source>
         <oldsource>Zix
-我的个人博客: http://www.xyz520.cn
-欢迎访问</oldsource>
+My Blog: http://www.xyz520.cn
+Welcome to visit</oldsource>
         <translation>Zix
-我的个人博客：http://www.xyz520.cn
+我的个人博客：http://www.xyz1001.xyz
 欢迎访问</translation>
     </message>
     <message>

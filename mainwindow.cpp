@@ -109,7 +109,7 @@ MainWindow::MainWindow(QWidget *parent) :
     if(Settings::getSettings().configs->autoHide)
     {
         //qDebug()<<"running...\n";
-        emit signalInfo(tr("163 Music Download Assistant is running background..."));
+        emit signalInfo(tr("Netease Music Assistant is running background..."));
     }
 }
 
@@ -143,7 +143,7 @@ void MainWindow::createTrayIcon()
 {
     trayicon = new QSystemTrayIcon(this);
     //创建QIcon对象，参数是图标资源，值为项目的资源文件中图标的地址
-    QIcon icon(":/image/icon/image/icon/163MusicAssistant.png");
+    QIcon icon(":/image/icon/image/icon/netease-music-assistant.png");
 
     trayiconMenu = new QMenu(this);
     //为托盘菜单添加菜单项
@@ -156,7 +156,7 @@ void MainWindow::createTrayIcon()
     //显示托盘图标
     trayicon->show();
     //设置系统托盘提示
-    trayicon->setToolTip(tr("163 Music Download Assistant"));
+    trayicon->setToolTip(tr("Netease Music Assistant"));
     //将创建菜单作为系统托盘菜单
     trayicon->setContextMenu(trayiconMenu);
 
@@ -444,7 +444,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
         //隐藏窗口
         hide();
         //提示后台运行信息
-        emit signalInfo(tr("163 Music Download Assistant is running background..."));
+        emit signalInfo(tr("Netease Music Assistant is running background..."));
         //忽略关闭事件
         event->ignore();
     }
@@ -459,7 +459,7 @@ void MainWindow::onInitConfigureError(QString error)
 void MainWindow::onAboutSoftwareTriggered()
 {
     //关于本软件中介绍信息
-    QString introduce = tr("Parse the download addresss of musics on 163 Music, even removed musics!\n"
+    QString introduce = tr("Parse the download addresss of musics on Netease Cloud Music, even removed musics and charge musics!\n"
                            "only for study, prohibit commercial use!\n"
                            "otherwise it has nothing to do with me."
                            "Copyright reserved\n");
@@ -472,7 +472,7 @@ void MainWindow::onAboutMeTriggered()
 {
     //“关于我”介绍信息
     QString introduce = tr("Zix\n"
-                           "My Blog: http://www.xyz520.cn\n"
+                           "My Blog: http://www.xyz1001.xyz\n"
                            "Welcome to visit");
     //弹出“关于我”关于窗口
     QMessageBox::about(this, tr("AboutMe"), introduce);
@@ -672,14 +672,14 @@ void MainWindow::clearMusicInfo()
 void MainWindow::showInfo(QString info)
 {
     //托盘显示提示信息，显示时间为1s（显示时间不对？）
-    trayicon->showMessage(tr("163 Music Assistant"), info,
+    trayicon->showMessage(tr("Netease Music Assistant"), info,
                           QSystemTrayIcon::Information, 1000);
 }
 
 void MainWindow::HandleError(QString error )
 {
     //托盘显示错误信息，显示时间为3s
-    trayicon->showMessage(tr("163 Music Assistant"), error,
+    trayicon->showMessage(tr("Netease Music Assistant"), error,
                           QSystemTrayIcon::Warning, 3000);
 
     --handlingCount;

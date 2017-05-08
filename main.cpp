@@ -2,7 +2,7 @@
  * Copyright：Zix
  * Author：Zix
  * Date：2016/05/14
- * Description：网易云音乐下载助手（163MusicDownloadAssistant）是一款用Qt5.5编写的软件，通过获取网易云音乐的歌曲ID获取该歌曲的下载地址，
+ * Description：网易云音乐助手（netease music assistant）是一款用Qt5编写的软件，通过获取网易云音乐的歌曲ID获取该歌曲的下载地址，
  * 包括付费和已下架的歌曲。
  *
  * Version：0.1
@@ -180,6 +180,13 @@
  * Summary: 3.X版大幅度优化了程序的代码,使得整个程序的结构及冗余度得到很大改善。同时，3.X将解析方式切换为官方API直接解析，
  *          不仅提高了解析的稳定性，加快了解析速度，也提供了更多有用的信息用来展示。但由于之前版本遗留的问题，导致程序的稳定
  *          性还需要进一步提高，另外，UI界面还需要进一步修改
+ *
+ * Version：3.7
+ * Copyright：Zix
+ * Author：Zix
+ * Date: 2017/05/08
+ * Description: 1.统一程序名称为网易云音乐助手(netease music assistant)
+ *
  * *******************************************************************************************************************/
 #include "mainwindow.h"
 #include <QApplication>

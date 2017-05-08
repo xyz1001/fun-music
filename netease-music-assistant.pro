@@ -9,7 +9,7 @@ QT       += network
 QT       += xml
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = 163MusicAssistant
+TARGET = netease-music-assistant
 TEMPLATE = app
 
 

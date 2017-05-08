@@ -3,7 +3,6 @@
         <file>myI18N_zh_CN.qm</file>
     </qresource>
     <qresource prefix="/image/icon">
-        <file>image/icon/163MusicAssistant.png</file>
         <file>image/icon/about.png</file>
         <file>image/icon/aboutme.png</file>
         <file>image/icon/copylink.png</file>
@@ -15,6 +14,7 @@
         <file>image/icon/play.png</file>
         <file>image/icon/quit.png</file>
         <file>image/icon/retry.png</file>
+        <file>image/icon/netease-music-assistant.png</file>
     </qresource>
     <qresource prefix="/image/pic">
         <file>image/pic/error.png</file>
