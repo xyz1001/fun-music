@@ -50,7 +50,7 @@ void PictureGetter::onReplyFinished()
         QByteArray datagram = reply->readAll();
         if(datagram.isEmpty() || !(pixmap->loadFromData(datagram)))
         {
-            pixmap->load(":/image/pic/image/pic/error.png");
+            pixmap->load(":/image/pic/error.png");
         }
         //pixmap->save("pic.jpg");
         emit signalPictureDownloaded(pixmap);
@@ -61,7 +61,7 @@ void PictureGetter::onReplyFinished()
     }
     else
     {
-        pixmap->load(":/image/pic/image/pic/error.png");
+        pixmap->load(":/image/pic/error.png");
         emit signalPictureDownloaded(pixmap);
     }
 }
@@ -71,7 +71,7 @@ void PictureGetter::onTimeOut()
     disconnect(reply, &QNetworkReply::finished, this, &PictureGetter::onReplyFinished);
     if(retryTime >= 3)
     {
-        pixmap->load(":/image/pic/image/pic/error.png");
+        pixmap->load(":/image/pic/error.png");
         emit signalPictureDownloaded(pixmap);
     }
     else
