@@ -11,11 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Netease Music Assistant</string>
+   <string>fan music</string>
   </property>
   <property name="windowIcon">
    <iconset resource="res.qrc">
-    <normaloff>:/image/icon/netease-music-assistant.png</normaloff>:/image/icon/netease-music-assistant.png</iconset>
+    <normaloff>:/image/icon/fan-music.png</normaloff>:/image/icon/fan-music.png</iconset>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>

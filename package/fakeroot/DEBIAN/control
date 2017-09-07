@@ -1,9 +1,0 @@
-Package: netease-music-assistant
-Version: 3.7
-Architecture: amd64
-Maintainer: Zix<875916780@qq.com>
-Installed-Size: 640
-Depends: libc6 (>= 2.14), libgcc1 (>= 1:4.1.1), libqt5widgets5 (>=5.0), libqt5gui5 (>=5.0), libqt5network5 (>= 5.0), libqt5xml5 (>= 5.0), libqt5core5a (>= 5.0), libstdc++6 (>= 4.1.1), libx11-6, libxext6, libxfixes3
-Section: utils
-Priority: optional
-Description: A Netease Cloud Music assistant which can download the musics that is not free or is removed off shelves in the Netease cloud music.
