@@ -15,13 +15,13 @@
   </property>
   <property name="windowIcon">
    <iconset resource="res.qrc">
-    <normaloff>:/image/icon/image/icon/netease-music-assistant.png</normaloff>:/image/icon/image/icon/netease-music-assistant.png</iconset>
+    <normaloff>:/image/icon/netease-music-assistant.png</normaloff>:/image/icon/netease-music-assistant.png</iconset>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>
   </property>
   <property name="styleSheet">
-   <string notr="true">QMainWindow {border-image: url(:/image/pic/image/pic/background.png);}
+   <string notr="true">QMainWindow {border-image: url(:/image/pic/background.png);}
 background:transparent;</string>
   </property>
   <widget class="QWidget" name="centralWidget">

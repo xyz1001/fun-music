@@ -1,0 +1,20 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+<file>./image/icon/about.png</file>
+<file>./image/icon/aboutme.png</file>
+<file>./image/icon/copylink.png</file>
+<file>./image/icon/delete.png</file>
+<file>./image/icon/download.png</file>
+<file>./image/icon/help.png</file>
+<file>./image/icon/netease-music-assistant.png</file>
+<file>./image/icon/openfile.png</file>
+<file>./image/icon/options.png</file>
+<file>./image/icon/play.png</file>
+<file>./image/icon/quit.png</file>
+<file>./image/icon/retry.png</file>
+<file>./image/pic/background.png</file>
+<file>./image/pic/error.png</file>
+<file>./image/pic/getlink1.png</file>
+<file>./image/pic/getlink2.png</file>
+</qresource>
+</RCC>

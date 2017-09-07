@@ -24,12 +24,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableWidgetMusicsInfo->setContextMenuPolicy(Qt::CustomContextMenu);
 
     contextMenu = new QMenu(this);
-    deleteItemAction = new QAction(QIcon(":/image/icon/image/icon/delete.png"), tr("Delete"), this);
-    openFileLocationAction = new QAction(QIcon(":/image/icon/image/icon/openfile.png"), tr("Open file location"), this);
-    retryAction = new QAction(QIcon(":/image/icon/image/icon/retry.png"), tr("Retry"), this);
-    downloadAction = new QAction(QIcon(":/image/icon/image/icon/download.png"), tr("Download"), this);
-    copyToClipboardAction = new QAction(QIcon(":/image/icon/image/icon/copylink.png"), tr("Copy to clipboard"), this);
-    playAction = new QAction(QIcon(":/image/icon/image/icon/play.png"), tr("Play"), this);
+    deleteItemAction = new QAction(QIcon(":/image/icon/delete.png"), tr("Delete"), this);
+    openFileLocationAction = new QAction(QIcon(":/image/icon/openfile.png"), tr("Open file location"), this);
+    retryAction = new QAction(QIcon(":/image/icon/retry.png"), tr("Retry"), this);
+    downloadAction = new QAction(QIcon(":/image/icon/download.png"), tr("Download"), this);
+    copyToClipboardAction = new QAction(QIcon(":/image/icon/copylink.png"), tr("Copy to clipboard"), this);
+    playAction = new QAction(QIcon(":/image/icon/play.png"), tr("Play"), this);
 
     contextMenu->addAction(playAction);
     contextMenu->addAction(retryAction);
@@ -123,19 +123,19 @@ MainWindow::~MainWindow()
 void MainWindow::createAction()
 {
     //退出
-    quit = new QAction(QIcon(":/image/icon/image/icon/quit.png"), tr("&Quit"), this);
+    quit = new QAction(QIcon(":/image/icon/quit.png"), tr("&Quit"), this);
     connect(quit, &QAction::triggered, qApp, &QApplication::quit);
     //选项
-    options = new QAction(QIcon(":/image/icon/image/icon/options.png"), tr("&Options"), this);
+    options = new QAction(QIcon(":/image/icon/options.png"), tr("&Options"), this);
     connect(options,&QAction::triggered, this, &MainWindow::onOptionsTriggered);
     //关于本软件
-    aboutSoftware = new QAction(QIcon(":/image/icon/image/icon/about.png"), tr("About &software"), this);
+    aboutSoftware = new QAction(QIcon(":/image/icon/about.png"), tr("About &software"), this);
     connect(aboutSoftware, &QAction::triggered, this, &MainWindow::onAboutSoftwareTriggered);
     //关于我
-    aboutMe = new QAction(QIcon(":/image/icon/image/icon/aboutme.png"), tr("About &me"), this);
+    aboutMe = new QAction(QIcon(":/image/icon/aboutme.png"), tr("About &me"), this);
     connect(aboutMe, &QAction::triggered, this, &MainWindow::onAboutMeTriggered);
     //帮助
-    help = new QAction(QIcon(":/image/icon/image/icon/help.png"), tr("&Help"), this);
+    help = new QAction(QIcon(":/image/icon/help.png"), tr("&Help"), this);
     connect(help, &QAction::triggered, this, &MainWindow::onHelpTriggered);
 }
 
@@ -143,7 +143,7 @@ void MainWindow::createTrayIcon()
 {
     trayicon = new QSystemTrayIcon(this);
     //创建QIcon对象，参数是图标资源，值为项目的资源文件中图标的地址
-    QIcon icon(":/image/icon/image/icon/netease-music-assistant.png");
+    QIcon icon(":/image/icon/netease-music-assistant.png");
 
     trayiconMenu = new QMenu(this);
     //为托盘菜单添加菜单项

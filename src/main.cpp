@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     //添加中文翻译
     QTranslator translator;
-    translator.load(":/lang/myI18N_zh_CN.qm");
+    translator.load(":/language/qm/zh_CN.qm");
     a.installTranslator(&translator);
 
     //载入本地设置
