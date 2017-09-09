@@ -188,11 +188,11 @@
  * Description: 1.统一程序名称为网易云音乐助手(netease music assistant)
  *
  * *******************************************************************************************************************/
-#include "mainwindow.h"
+#include "old/mainwindow.h"
 #include <QApplication>
 #include <QTranslator>
-#include "settings.h"
-#include "register.h"
+#include "old/settings.h"
+#include "old/register.h"
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
