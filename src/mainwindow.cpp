@@ -109,7 +109,7 @@ MainWindow::MainWindow(QWidget *parent) :
     if(Settings::getSettings().configs->autoHide)
     {
         //qDebug()<<"running...\n";
-        emit signalInfo(tr("fan music is running background..."));
+        emit signalInfo(tr("fun music is running background..."));
     }
 }
 
@@ -143,7 +143,7 @@ void MainWindow::createTrayIcon()
 {
     trayicon = new QSystemTrayIcon(this);
     //创建QIcon对象，参数是图标资源，值为项目的资源文件中图标的地址
-    QIcon icon(":/image/icon/fan-music.png");
+    QIcon icon(":/image/icon/fun-music.png");
 
     trayiconMenu = new QMenu(this);
     //为托盘菜单添加菜单项
@@ -156,7 +156,7 @@ void MainWindow::createTrayIcon()
     //显示托盘图标
     trayicon->show();
     //设置系统托盘提示
-    trayicon->setToolTip(tr("fan music"));
+    trayicon->setToolTip(tr("fun music"));
     //将创建菜单作为系统托盘菜单
     trayicon->setContextMenu(trayiconMenu);
 
@@ -444,7 +444,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
         //隐藏窗口
         hide();
         //提示后台运行信息
-        emit signalInfo(tr("fan music is running background..."));
+        emit signalInfo(tr("fun music is running background..."));
         //忽略关闭事件
         event->ignore();
     }
@@ -672,14 +672,14 @@ void MainWindow::clearMusicInfo()
 void MainWindow::showInfo(QString info)
 {
     //托盘显示提示信息，显示时间为1s（显示时间不对？）
-    trayicon->showMessage(tr("fan music"), info,
+    trayicon->showMessage(tr("fun music"), info,
                           QSystemTrayIcon::Information, 1000);
 }
 
 void MainWindow::HandleError(QString error )
 {
     //托盘显示错误信息，显示时间为3s
-    trayicon->showMessage(tr("fan music"), error,
+    trayicon->showMessage(tr("fun music"), error,
                           QSystemTrayIcon::Warning, 3000);
 
     --handlingCount;

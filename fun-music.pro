@@ -9,7 +9,7 @@ QT += network
 QT += xml
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = fan-music
+TARGET = fun-music
 TEMPLATE = app
 
 CONFIG += C++11

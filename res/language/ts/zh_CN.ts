@@ -166,7 +166,7 @@
         <location filename="../../../src/mainwindow.cpp" line="159"/>
         <location filename="../../../src/mainwindow.cpp" line="675"/>
         <location filename="../../../src/mainwindow.cpp" line="682"/>
-        <source>fan music</source>
+        <source>fun music</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -309,7 +309,7 @@
     <message>
         <location filename="../../../src/mainwindow.cpp" line="112"/>
         <location filename="../../../src/mainwindow.cpp" line="447"/>
-        <source>fan music is running background...</source>
+        <source>fun music is running background...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

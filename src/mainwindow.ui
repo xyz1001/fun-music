@@ -11,11 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>fan music</string>
+   <string>fun music</string>
   </property>
   <property name="windowIcon">
    <iconset resource="res.qrc">
-    <normaloff>:/image/icon/fan-music.png</normaloff>:/image/icon/fan-music.png</iconset>
+    <normaloff>:/image/icon/fun-music.png</normaloff>:/image/icon/fun-music.png</iconset>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>
