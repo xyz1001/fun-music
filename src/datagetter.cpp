@@ -161,7 +161,6 @@ void DataGetter::handleError(QString error, int errorType)
         musicInfo->status = 0;
         break;
     case JSON_GETTER_ERROR:
-    case HTML_GETTER_ERROR:
         musicInfo->status = -1;
         emit signalError(musicInfo->musicID + tr("parse unsuccessfully"));
         emit signalTableWidgetMusicInfoUpdate(musicInfo->row, STATUS, tr("Parse Unsuccessfully"));

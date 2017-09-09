@@ -51,8 +51,6 @@ void Options::loadConfigs()
     ui->checkBoxAutoHide->setChecked(configs->autoHide);
     ui->checkBoxShowGuidaceOnStart->setChecked(configs->showGuidanceOnStart);
     ui->comboBoxQuality->setCurrentIndex(configs->quality);
-    ui->radioButtonJsonParser->setChecked(configs->useJsonParser);
-    ui->radioButtonHtmlParser->setChecked(!(configs->useJsonParser));
 }
 
 void Options::writeConfigs()
@@ -63,7 +61,6 @@ void Options::writeConfigs()
     configs->autoHide = ui->checkBoxAutoHide->isChecked();
     configs->showGuidanceOnStart = ui->checkBoxShowGuidaceOnStart->isChecked();
     configs->quality = ui->comboBoxQuality->currentIndex();
-    configs->useJsonParser = ui->radioButtonJsonParser->isChecked();
 }
 
 void Options::apply()

@@ -195,51 +195,6 @@
     <string>Open</string>
    </property>
   </widget>
-  <widget class="QGroupBox" name="groupBoxParser">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>130</y>
-     <width>491</width>
-     <height>81</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>Parser</string>
-   </property>
-   <widget class="QRadioButton" name="radioButtonJsonParser">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>20</y>
-      <width>461</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Parser 1: stable and fast, more info can be got</string>
-    </property>
-    <property name="checked">
-     <bool>true</bool>
-    </property>
-   </widget>
-   <widget class="QRadioButton" name="radioButtonHtmlParser">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>50</y>
-      <width>461</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Parser 2: unstable and slow, less info can be got</string>
-    </property>
-    <property name="checked">
-     <bool>false</bool>
-    </property>
-   </widget>
-  </widget>
  </widget>
  <resources/>
  <connections/>

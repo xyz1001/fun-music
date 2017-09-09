@@ -10,7 +10,6 @@
 #include <QTimer>
 #include <QDesktopServices>
 #include "constant.h"
-#include "handlerwithhtml.h"
 #include "handlerwithjson.h"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -184,11 +183,7 @@ void MainWindow::startParse()
         }
         //提示正在解析中
         //emit signalInfo(tr("Parsing..."));
-        //通过获取www.loadfield.com/163/song.php上Html信息进行解析
-        if(Settings::getSettings().configs->useJsonParser)
-            musicInfo->dataGetter = new HandlerWithJson(musicInfo, this, this);
-        else
-            musicInfo->dataGetter = new HandlerWithHtml(musicInfo, this, this);
+        musicInfo->dataGetter = new HandlerWithJson(musicInfo, this, this);
 
         //处理完成
         connect(musicInfo->dataGetter, &DataGetter::signalFinished, this, &MainWindow::onFinished);

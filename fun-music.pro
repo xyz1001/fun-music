@@ -18,10 +18,7 @@ SOURCES += src/main.cpp\
            src/mainwindow.cpp \
            src/mp3getter.cpp \
            src/picturegetter.cpp \
-           src/htmlgetter.cpp \
-           src/htmlhandler.cpp \
            src/datagetter.cpp \
-           src/handlerwithhtml.cpp \
            src/clipboardmonitor.cpp \
            src/settings.cpp \
            src/options.cpp \
@@ -38,10 +35,7 @@ SOURCES += src/main.cpp\
 HEADERS  += src/mainwindow.h \
             src/mp3getter.h \
             src/picturegetter.h \
-            src/htmlgetter.h \
-            src/htmlhandler.h \
             src/datagetter.h \
-            src/handlerwithhtml.h \
             src/clipboardmonitor.h \
             src/settings.h \
             src/options.h \

@@ -15,7 +15,6 @@ const int COLUMN_COUNT = 6;
 //错误信息
 enum {
     DATA_GETTER_ERROR, //数据获取错误
-    HTML_GETTER_ERROR, //HTML获取错误
     JSON_GETTER_ERROR,  //JSON获取错误
     MP3_GETTER_ERROR,  //MP3下载错误
     PICTURE_GETTER_ERROR,  //图片下载错误
