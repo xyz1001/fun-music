@@ -15,46 +15,46 @@ TEMPLATE = app
 CONFIG += C++11
 
 SOURCES += src/main.cpp\
-           src/mainwindow.cpp \
-           src/mp3getter.cpp \
-           src/picturegetter.cpp \
-           src/datagetter.cpp \
-           src/clipboardmonitor.cpp \
-           src/settings.cpp \
-           src/options.cpp \
-           src/guidance.cpp \
-           src/jsongetter.cpp \
-           src/handlerwithjson.cpp \
-           src/albumjsonparser.cpp \
-           src/detailjsonparser.cpp \
-           src/jsonparser.cpp \
-           src/networkaccess.cpp \
-           src/register.cpp \
-           src/devicecheck.cpp
+           src/old/mainwindow.cpp \
+           src/old/mp3getter.cpp \
+           src/old/picturegetter.cpp \
+           src/old/datagetter.cpp \
+           src/old/clipboardmonitor.cpp \
+           src/old/settings.cpp \
+           src/old/options.cpp \
+           src/old/guidance.cpp \
+           src/old/jsongetter.cpp \
+           src/old/handlerwithjson.cpp \
+           src/old/albumjsonparser.cpp \
+           src/old/detailjsonparser.cpp \
+           src/old/jsonparser.cpp \
+           src/old/networkaccess.cpp \
+           src/old/register.cpp \
+           src/old/devicecheck.cpp
 
-HEADERS  += src/mainwindow.h \
-            src/mp3getter.h \
-            src/picturegetter.h \
-            src/datagetter.h \
-            src/clipboardmonitor.h \
-            src/settings.h \
-            src/options.h \
-            src/musicinfo.h \
-            src/guidance.h \
-            src/jsongetter.h \
-            src/handlerwithjson.h \
-            src/albumjsonparser.h \
-            src/detailjsonparser.h \
-            src/jsonparser.h \
-            src/constant.h \
-            src/networkaccess.h \
-            src/register.h \
-            src/devicecheck.h
+HEADERS  += src/old/mainwindow.h \
+            src/old/mp3getter.h \
+            src/old/picturegetter.h \
+            src/old/datagetter.h \
+            src/old/clipboardmonitor.h \
+            src/old/settings.h \
+            src/old/options.h \
+            src/old/musicinfo.h \
+            src/old/guidance.h \
+            src/old/jsongetter.h \
+            src/old/handlerwithjson.h \
+            src/old/albumjsonparser.h \
+            src/old/detailjsonparser.h \
+            src/old/jsonparser.h \
+            src/old/constant.h \
+            src/old/networkaccess.h \
+            src/old/register.h \
+            src/old/devicecheck.h
 
-FORMS += src/mainwindow.ui \
-         src/options.ui \
-         src/guidance.ui \
-         src/register.ui
+FORMS += src/old/mainwindow.ui \
+         src/old/options.ui \
+         src/old/guidance.ui \
+         src/old/register.ui
 
 RESOURCES += res/image.qrc \
              res/language.qrc \
